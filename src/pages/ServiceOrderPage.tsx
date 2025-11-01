@@ -127,7 +127,10 @@ const ServiceOrderPage: React.FC = () => {
               </CardHeader>
               <CardContent className="text-sm text-gray-600 dark:text-gray-400">
                 <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
-                <p><strong>Descrição:</strong> {order.description}</p>
+                <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
+                {order.assignedTo && ( // Mostrar o técnico atribuído se existir
+                  <p className="mb-2"><strong>Técnico:</strong> {order.assignedTo}</p>
+                )}
                 <div className="mt-4 flex justify-end">
                   <Link to={`/service-orders/${order.id}`}>
                     <Button variant="outline" size="sm">
