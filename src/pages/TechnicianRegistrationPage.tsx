@@ -17,6 +17,7 @@ const TechnicianRegistrationPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
   const { addTechnician } = useTechnicians();
   const [technicianName, setTechnicianName] = useState('');
+  const [technicianEmail, setTechnicianEmail] = useState(''); // Novo estado para o e-mail
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -28,15 +29,16 @@ const TechnicianRegistrationPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!technicianName.trim()) {
-      showError('Por favor, insira o nome do técnico.');
+    if (!technicianName.trim() || !technicianEmail.trim()) { // Validar também o e-mail
+      showError('Por favor, preencha todos os campos.');
       setLoading(false);
       return;
     }
 
     try {
-      addTechnician(technicianName.trim());
+      addTechnician(technicianName.trim(), technicianEmail.trim()); // Passar o e-mail
       setTechnicianName(''); // Limpar o campo após o cadastro
+      setTechnicianEmail(''); // Limpar o campo de e-mail
       await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
       navigate('/service-orders'); // Redirecionar para a lista de OS após o cadastro
     } catch (error) {
@@ -83,6 +85,18 @@ const TechnicianRegistrationPage: React.FC = () => {
                 placeholder="Nome completo do técnico"
                 value={technicianName}
                 onChange={(e) => setTechnicianName(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2"> {/* Novo campo para o e-mail */}
+              <Label htmlFor="technicianEmail">E-mail do Técnico</Label>
+              <Input
+                id="technicianEmail"
+                type="email"
+                placeholder="email@example.com"
+                value={technicianEmail}
+                onChange={(e) => setTechnicianEmail(e.target.value)}
                 required
                 disabled={loading}
               />
