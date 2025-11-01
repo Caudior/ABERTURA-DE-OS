@@ -11,7 +11,8 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ServiceOrderPage from "./pages/ServiceOrderPage";
 import NewServiceOrderPage from "./pages/NewServiceOrderPage";
-import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage"; // Importar a nova página
+import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
+import TechnicianDashboardPage from "./pages/TechnicianDashboardPage"; // Importar a nova página
 
 const queryClient = new QueryClient();
 
@@ -30,7 +31,8 @@ const App = () => (
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/service-orders" element={<ServiceOrderPage />} />
               <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
-              <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} /> {/* Nova rota para detalhes da OS */}
+              <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+              <Route path="/technician-dashboard" element={<TechnicianDashboardPage />} /> {/* Nova rota para o painel do técnico */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

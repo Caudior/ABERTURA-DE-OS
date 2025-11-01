@@ -2,11 +2,11 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom"; // Importar Link
-import { Button } from "@/components/ui/button"; // Importar Button
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const { session, loading } = useAuth();
+  const { session, loading, username } = useAuth(); // Obter o username
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,11 +40,20 @@ const Index = () => {
         <p className="text-lg text-gray-500 dark:text-gray-400">
           Navegue usando o menu lateral (em breve) ou comece a gerenciar suas tarefas.
         </p>
-        <Link to="/service-orders">
-          <Button className="mt-6">
-            Ver Ordens de Serviço
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
+          <Link to="/service-orders">
+            <Button>
+              Ver Ordens de Serviço
+            </Button>
+          </Link>
+          {username && ( // Mostrar o botão apenas se houver um username logado
+            <Link to="/technician-dashboard">
+              <Button variant="secondary">
+                Minhas Ordens ({username})
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
       <MadeWithDyad />
     </div>
