@@ -1,21 +1,25 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders } from '@/contexts/ServiceOrderContext'; // Importar useServiceOrders
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-// Removido mockServiceOrders, agora vem do contexto
+import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext'; // Importar ServiceOrder para tipos
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
-  const { serviceOrders } = useServiceOrders(); // Obter serviceOrders do contexto
+  const { serviceOrders } = useServiceOrders();
   const navigate = useNavigate();
+  const [filterStatus, setFilterStatus] = useState<'Todos' | ServiceOrder['status']>('Todos');
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -32,26 +36,48 @@ const ServiceOrderPage: React.FC = () => {
   }
 
   if (!session) {
-    return null; // Será redirecionado para o login
+    return null;
   }
+
+  const filteredOrders = serviceOrders.filter(order => {
+    if (filterStatus === 'Todos') {
+      return true;
+    }
+    return order.status === filterStatus;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
-          <Link to="/service-orders/new">
-            <Button>
-              <span>
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <Select
+              value={filterStatus}
+              onValueChange={(value: 'Todos' | ServiceOrder['status']) => setFilterStatus(value)}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrar por Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Todos">Todos</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
+                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                <SelectItem value="Concluído">Concluído</SelectItem>
+                <SelectItem value="Cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Link to="/service-orders/new">
+              <Button className="w-full sm:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nova Ordem
-              </span>
-            </Button>
-          </Link>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {serviceOrders.map((order) => ( // Usar serviceOrders do contexto
+          {filteredOrders.map((order) => (
             <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center text-lg">
@@ -86,9 +112,9 @@ const ServiceOrderPage: React.FC = () => {
           ))}
         </div>
 
-        {serviceOrders.length === 0 && ( // Usar serviceOrders do contexto
+        {filteredOrders.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
-            Nenhuma ordem de serviço encontrada. Crie uma nova!
+            Nenhuma ordem de serviço encontrada com o status "{filterStatus}".
           </p>
         )}
       </div>
