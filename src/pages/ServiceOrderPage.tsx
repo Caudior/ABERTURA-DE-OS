@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Logo from '@/components/Logo'; // Importar o componente Logo
+import Logo from '@/components/Logo';
+import { parse, addHours, isBefore } from 'date-fns'; // Importar funções de data
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
@@ -40,6 +41,16 @@ const ServiceOrderPage: React.FC = () => {
     return null;
   }
 
+  // Função para verificar se a OS está pendente e há mais de 48 horas
+  const isOverdue = (order: ServiceOrder) => {
+    if (order.status === 'Pendente') {
+      const issueDateTime = parse(order.issueDate, 'dd/MM/yyyy HH:mm:ss', new Date());
+      const fortyEightHoursAgo = addHours(new Date(), -48);
+      return isBefore(issueDateTime, fortyEightHoursAgo);
+    }
+    return false;
+  };
+
   const filteredOrders = serviceOrders.filter(order => {
     if (filterStatus === 'Todos') {
       return true;
@@ -47,15 +58,22 @@ const ServiceOrderPage: React.FC = () => {
     return order.status === filterStatus;
   });
 
-  const getStatusClasses = (status: ServiceOrder['status']) => {
+  const getStatusClasses = (order: ServiceOrder) => {
+    const status = order.status;
+    const baseClasses = 'px-2 py-1 rounded-full text-xs font-medium';
+
+    if (isOverdue(order)) {
+      return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300`;
+    }
+
     switch (status) {
-      case 'Pendente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'Em Andamento': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'Em Deslocamento': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'; // Novo status
-      case 'Chegou': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'; // Novo status
-      case 'Concluído': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'Cancelado': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case 'Pendente': return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300`;
+      case 'Em Andamento': return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300`;
+      case 'Em Deslocamento': return `${baseClasses} bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300`;
+      case 'Chegou': return `${baseClasses} bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300`;
+      case 'Concluído': return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300`;
+      case 'Cancelado': return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200`;
+      default: return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200`;
     }
   };
 
@@ -63,7 +81,7 @@ const ServiceOrderPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <div className="flex items-center gap-4"> {/* Container para Logo e Título */}
+          <div className="flex items-center gap-4">
             <Logo />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
           </div>
@@ -79,8 +97,8 @@ const ServiceOrderPage: React.FC = () => {
                 <SelectItem value="Todos">Todos</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem> {/* Adicionado ao filtro */}
-                <SelectItem value="Chegou">Chegou</SelectItem> {/* Adicionado ao filtro */}
+                <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem>
+                <SelectItem value="Chegou">Chegou</SelectItem>
                 <SelectItem value="Concluído">Concluído</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
@@ -101,7 +119,7 @@ const ServiceOrderPage: React.FC = () => {
                 <CardTitle className="flex justify-between items-center text-lg">
                   <span>{order.id} - {order.clientName}</span>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClasses(order.status)}`}
+                    className={getStatusClasses(order)} // Usar a nova função getStatusClasses
                   >
                     {order.status}
                   </span>
