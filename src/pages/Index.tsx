@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const { session, loading, username } = useAuth(); // Obter o username
+  const { session, loading, username } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const Index = () => {
   }
 
   if (!session) {
-    return null; // Will redirect to login
+    return null;
   }
 
   return (
@@ -46,13 +46,18 @@ const Index = () => {
               Ver Ordens de Serviço
             </Button>
           </Link>
-          {username && ( // Mostrar o botão apenas se houver um username logado
+          {username && (
             <Link to="/technician-dashboard">
               <Button variant="secondary">
                 Minhas Ordens ({username})
               </Button>
             </Link>
           )}
+          <Link to="/register-technician"> {/* Novo botão para cadastro de técnico */}
+            <Button variant="outline">
+              Cadastrar Técnico
+            </Button>
+          </Link>
         </div>
       </div>
       <MadeWithDyad />

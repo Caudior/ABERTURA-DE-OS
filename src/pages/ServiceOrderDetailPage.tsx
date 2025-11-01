@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext';
+import { useTechnicians } from '@/contexts/TechnicianContext'; // Importar o novo hook
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft } from 'lucide-react';
@@ -16,13 +17,12 @@ import {
 } from "@/components/ui/select";
 import { showSuccess, showError } from '@/utils/toast';
 
-const technicians = ['Técnico A', 'Técnico B', 'Técnico C']; // Lista de técnicos disponíveis
-
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
   const { serviceOrders, updateServiceOrderStatus, assignTechnician } = useServiceOrders();
+  const { technicians } = useTechnicians(); // Usar o hook para obter a lista de técnicos
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
@@ -174,8 +174,8 @@ const ServiceOrderDetailPage: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {technicians.map((tech) => (
-                    <SelectItem key={tech} value={tech}>
-                      {tech}
+                    <SelectItem key={tech.id} value={tech.name}>
+                      {tech.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
