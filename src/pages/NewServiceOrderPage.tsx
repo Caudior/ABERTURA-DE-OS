@@ -10,12 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChevronLeft } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders } from '@/contexts/ServiceOrderContext'; // Importar useServiceOrders
+import { useServiceOrders } from '@/contexts/ServiceOrderContext';
+import Logo from '@/components/Logo'; // Importar o componente Logo
 
 const NewServiceOrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
-  const { addServiceOrder } = useServiceOrders(); // Obter addServiceOrder do contexto
+  const { addServiceOrder } = useServiceOrders();
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,6 @@ const NewServiceOrderPage: React.FC = () => {
     }
 
     try {
-      // Adicionar a nova ordem de serviço usando a função do contexto
       addServiceOrder({ clientName, description });
       await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
       showSuccess('Ordem de serviço criada com sucesso!');
@@ -72,6 +72,7 @@ const NewServiceOrderPage: React.FC = () => {
             <Button variant="outline" size="icon" onClick={() => navigate('/service-orders')}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
+            <Logo /> {/* Adicionar o Logo aqui */}
             <div>
               <CardTitle className="text-2xl font-bold">Nova Ordem de Serviço</CardTitle>
               <CardDescription>Preencha os detalhes para criar uma nova ordem.</CardDescription>

@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Logo from '@/components/Logo'; // Importar o componente Logo
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
@@ -62,7 +63,10 @@ const ServiceOrderPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
+          <div className="flex items-center gap-4"> {/* Container para Logo e Título */}
+            <Logo />
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
+          </div>
           <div className="flex items-center gap-4 w-full sm:w-auto">
             <Select
               value={filterStatus}
@@ -107,7 +111,7 @@ const ServiceOrderPage: React.FC = () => {
                 <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
                 <p><strong>Descrição:</strong> {order.description}</p>
                 <div className="mt-4 flex justify-end">
-                  <Link to={`/service-orders/${order.id}`}> {/* Link atualizado para a página de detalhes */}
+                  <Link to={`/service-orders/${order.id}`}>
                     <Button variant="outline" size="sm">
                       Ver Detalhes
                     </Button>
