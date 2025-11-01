@@ -40,11 +40,11 @@ const Index = () => {
         <p className="text-lg text-gray-500 dark:text-gray-400">
           Navegue usando o menu lateral (em breve) ou comece a gerenciar suas tarefas.
         </p>
-        <Button asChild className="mt-6"> {/* Adicionando o botão aqui */}
-          <Link to="/service-orders">
+        <Link to="/service-orders">
+          <Button className="mt-6">
             Ver Ordens de Serviço
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
       <MadeWithDyad />
     </div>

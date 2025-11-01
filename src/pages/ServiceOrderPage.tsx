@@ -76,15 +76,14 @@ const ServiceOrderPage: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
-          <Button asChild>
-            <Link to="/service-orders/new">
-              {/* Envolvendo os filhos do Link em um span para que ele receba apenas um filho */}
+          <Link to="/service-orders/new">
+            <Button>
               <span>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nova Ordem
               </span>
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -112,9 +111,11 @@ const ServiceOrderPage: React.FC = () => {
                 <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
                 <p><strong>Descrição:</strong> {order.description}</p>
                 <div className="mt-4 flex justify-end">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link to={`/service-orders/${order.id}`}>Ver Detalhes</Link>
-                  </Button>
+                  <Link to={`/service-orders/${order.id}`}>
+                    <Button variant="outline" size="sm">
+                      Ver Detalhes
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
