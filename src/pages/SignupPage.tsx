@@ -3,28 +3,28 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTechnicians } from '@/contexts/TechnicianContext'; // Importar useTechnicians
+import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox'; // Importar Checkbox
-import { showSuccess, showError } from '@/utils/toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { showError } from '@/utils/toast';
 import Logo from '@/components/Logo';
 
 const SignupPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(''); // Novo estado para o e-mail
+  const [fullName, setFullName] = useState(''); // Alterado para fullName
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isTechnician, setIsTechnician] = useState(false); // Novo estado para a checkbox
-  const { login, loading } = useAuth();
-  const { addTechnician } = useTechnicians(); // Usar o hook de técnicos
+  const [isTechnician, setIsTechnician] = useState(false);
+  const { signup, loading } = useAuth(); // Usar signup do AuthContext
+  const { addTechnician } = useTechnicians();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !email || !password || !confirmPassword) { // Validar e-mail também
+    if (!fullName || !email || !password || !confirmPassword) {
       showError('Por favor, preencha todos os campos.');
       return;
     }
@@ -33,18 +33,17 @@ const SignupPage: React.FC = () => {
       return;
     }
     try {
-      // Simular cadastro e login
-      await login(username); 
+      await signup(fullName, email, password, isTechnician); // Chamar signup do Supabase
       
-      // Se for técnico, adicioná-lo à lista de técnicos
       if (isTechnician) {
-        addTechnician(username, email); // Adicionar o técnico com nome de usuário e e-mail
+        addTechnician(fullName, email); // Adicionar ao contexto local de técnicos
       }
 
-      showSuccess('Cadastro realizado com sucesso! Você foi logado automaticamente.');
-      navigate('/');
-    } catch (error) {
-      showError('Falha no cadastro. Tente novamente.');
+      // Após o cadastro, o onAuthStateChange no AuthContext deve lidar com a sessão
+      // e redirecionar para a página inicial.
+      navigate('/'); 
+    } catch (error: any) {
+      showError(error.message || 'Falha no cadastro. Tente novamente.');
       console.error('Signup error:', error);
     }
   };
@@ -62,13 +61,13 @@ const SignupPage: React.FC = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Nome de Usuário</Label>
+              <Label htmlFor="fullName">Nome Completo</Label> {/* Alterado para Nome Completo */}
               <Input
-                id="username"
+                id="fullName"
                 type="text"
-                placeholder="seu_usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Seu Nome Completo"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
               />

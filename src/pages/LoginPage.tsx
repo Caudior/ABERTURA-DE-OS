@@ -5,27 +5,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { showSuccess, showError } from '@/utils/toast';
+import { showError } from '@/utils/toast';
 import Logo from '@/components/Logo';
 
 const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // Alterado para email
   const [password, setPassword] = useState('');
   const { login, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    if (!email || !password) {
       showError('Por favor, preencha todos os campos.');
       return;
     }
     try {
-      await login(username);
-      showSuccess('Login realizado com sucesso!');
+      await login(email, password); // Usar email e password
       navigate('/');
-    } catch (error) {
-      showError('Falha no login. Verifique suas credenciais.');
+    } catch (error: any) {
+      showError(error.message || 'Falha no login. Verifique suas credenciais.');
       console.error('Login error:', error);
     }
   };
@@ -37,19 +36,19 @@ const LoginPage: React.FC = () => {
           <Logo />
           <CardTitle className="text-2xl font-bold mt-4">Entrar</CardTitle>
           <CardDescription>
-            Insira seu nome de usuário e senha para acessar sua conta.
+            Insira seu e-mail e senha para acessar sua conta.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Nome de Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="seu_usuario"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="seu_email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
               />

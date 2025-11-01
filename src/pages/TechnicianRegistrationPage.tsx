@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast'; // Importar showSuccess
 import Logo from '@/components/Logo';
 
 const TechnicianRegistrationPage: React.FC = () => {
@@ -17,7 +17,7 @@ const TechnicianRegistrationPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
   const { addTechnician } = useTechnicians();
   const [technicianName, setTechnicianName] = useState('');
-  const [technicianEmail, setTechnicianEmail] = useState(''); // Novo estado para o e-mail
+  const [technicianEmail, setTechnicianEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,20 +29,25 @@ const TechnicianRegistrationPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!technicianName.trim() || !technicianEmail.trim()) { // Validar também o e-mail
+    if (!technicianName.trim() || !technicianEmail.trim()) {
       showError('Por favor, preencha todos os campos.');
       setLoading(false);
       return;
     }
 
     try {
-      addTechnician(technicianName.trim(), technicianEmail.trim()); // Passar o e-mail
-      setTechnicianName(''); // Limpar o campo após o cadastro
-      setTechnicianEmail(''); // Limpar o campo de e-mail
+      // Aqui, em um cenário real, você faria uma chamada para o Supabase
+      // para criar um novo usuário com a role 'technician' ou adicionar um perfil de técnico.
+      // Por enquanto, vamos usar a função addTechnician do contexto que gerencia a lista local.
+      addTechnician(technicianName.trim(), technicianEmail.trim()); 
+      setTechnicianName('');
+      setTechnicianEmail('');
+      showSuccess(`Técnico "${technicianName.trim()}" cadastrado com sucesso!`);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
-      navigate('/service-orders'); // Redirecionar para a lista de OS após o cadastro
+      navigate('/'); // Redirecionar para a página inicial
     } catch (error) {
       console.error('Error adding technician:', error);
+      showError('Erro ao cadastrar técnico.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +94,7 @@ const TechnicianRegistrationPage: React.FC = () => {
                 disabled={loading}
               />
             </div>
-            <div className="space-y-2"> {/* Novo campo para o e-mail */}
+            <div className="space-y-2">
               <Label htmlFor="technicianEmail">E-mail do Técnico</Label>
               <Input
                 id="technicianEmail"
