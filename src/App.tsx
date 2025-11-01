@@ -5,9 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { AuthProvider } from "@/contexts/AuthContext"; // Corrected import path
-import LoginPage from "./pages/LoginPage"; // Will create this
-import SignupPage from "./pages/SignupPage"; // Will create this
+import { AuthProvider } from "@/contexts/AuthContext";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import ServiceOrderPage from "./pages/ServiceOrderPage"; // Import the new ServiceOrderPage
 
 const queryClient = new QueryClient();
 
@@ -17,11 +18,12 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider> {/* Wrap routes with AuthProvider */}
+        <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginPage />} /> {/* New Login Route */}
-            <Route path="/signup" element={<SignupPage />} /> {/* New Signup Route */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/service-orders" element={<ServiceOrderPage />} /> {/* New Service Order Route */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
