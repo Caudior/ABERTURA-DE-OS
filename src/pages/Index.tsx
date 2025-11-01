@@ -9,6 +9,13 @@ const Index = () => {
   const { session, loading, username, logout } = useAuth(); // Importar a função logout
   const navigate = useNavigate();
 
+  // Adicionando log para testar o carregamento de variáveis de ambiente
+  useEffect(() => {
+    console.log('VITE_TEST_VARIABLE:', import.meta.env.VITE_TEST_VARIABLE);
+    console.log('VITE_SUPABASE_URL (from Index.tsx):', import.meta.env.VITE_SUPABASE_URL);
+    console.log('VITE_SUPABASE_ANON_KEY (from Index.tsx):', import.meta.env.VITE_SUPABASE_ANON_KEY);
+  }, []);
+
   useEffect(() => {
     if (!loading && !session) {
       navigate("/login");
