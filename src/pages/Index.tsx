@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const { session, loading, username } = useAuth();
+  const { session, loading, username, logout } = useAuth(); // Importar a função logout
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,6 +14,11 @@ const Index = () => {
       navigate("/login");
     }
   }, [session, loading, navigate]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   if (loading) {
     return (
@@ -53,11 +58,14 @@ const Index = () => {
               </Button>
             </Link>
           )}
-          <Link to="/register-technician"> {/* Novo botão para cadastro de técnico */}
+          <Link to="/register-technician">
             <Button variant="outline">
               Cadastrar Técnico
             </Button>
           </Link>
+          <Button variant="destructive" onClick={handleLogout}> {/* Botão de Sair */}
+            Sair
+          </Button>
         </div>
       </div>
       <MadeWithDyad />
