@@ -14,4 +14,6 @@ export default defineConfig(() => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Adicionando envDir para garantir que o Vite procure por arquivos .env na raiz do projeto
+  envDir: './', 
 }));
