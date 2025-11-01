@@ -78,8 +78,11 @@ const ServiceOrderPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
           <Button asChild>
             <Link to="/service-orders/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nova Ordem
+              {/* Envolvendo os filhos do Link em um span para que ele receba apenas um filho */}
+              <span>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nova Ordem
+              </span>
             </Link>
           </Button>
         </div>
