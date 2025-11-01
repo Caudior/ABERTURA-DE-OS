@@ -16,13 +16,16 @@ import {
 } from "@/components/ui/select";
 import { showSuccess, showError } from '@/utils/toast';
 
+const technicians = ['Técnico A', 'Técnico B', 'Técnico C']; // Lista de técnicos disponíveis
+
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { session, loading: authLoading } = useAuth();
-  const { serviceOrders, updateServiceOrderStatus } = useServiceOrders();
+  const { serviceOrders, updateServiceOrderStatus, assignTechnician } = useServiceOrders();
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
+  const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -36,6 +39,7 @@ const ServiceOrderDetailPage: React.FC = () => {
       setOrder(foundOrder);
       if (foundOrder) {
         setCurrentStatus(foundOrder.status);
+        setSelectedTechnician(foundOrder.assignedTo);
       }
     }
   }, [id, serviceOrders]);
@@ -45,6 +49,15 @@ const ServiceOrderDetailPage: React.FC = () => {
       updateServiceOrderStatus(order.id, newStatus);
       setCurrentStatus(newStatus);
       showSuccess(`Status da OS ${order.id} atualizado para "${newStatus}"`);
+    }
+  };
+
+  const handleAssignTechnician = () => {
+    if (order && selectedTechnician && selectedTechnician !== order.assignedTo) {
+      assignTechnician(order.id, selectedTechnician);
+      showSuccess(`OS ${order.id} atribuída a ${selectedTechnician}`);
+    } else if (order && !selectedTechnician) {
+      showError('Por favor, selecione um técnico para atribuir.');
     }
   };
 
@@ -146,6 +159,31 @@ const ServiceOrderDetailPage: React.FC = () => {
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Nova seção para atribuição de técnico */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+              {order.assignedTo || 'Nenhum técnico atribuído'}
+            </p>
+            <div className="flex gap-2 mt-2">
+              <Select value={selectedTechnician} onValueChange={setSelectedTechnician}>
+                <SelectTrigger className="flex-grow">
+                  <SelectValue placeholder="Atribuir Técnico" />
+                </SelectTrigger>
+                <SelectContent>
+                  {technicians.map((tech) => (
+                    <SelectItem key={tech} value={tech}>
+                      {tech}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={handleAssignTechnician} disabled={!selectedTechnician || selectedTechnician === order.assignedTo}>
+                Atribuir
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
