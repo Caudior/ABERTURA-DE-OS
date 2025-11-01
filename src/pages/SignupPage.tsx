@@ -1,23 +1,30 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTechnicians } from '@/contexts/TechnicianContext'; // Importar useTechnicians
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox'; // Importar Checkbox
 import { showSuccess, showError } from '@/utils/toast';
 import Logo from '@/components/Logo';
 
 const SignupPage: React.FC = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // Novo estado para o e-mail
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { login, loading } = useAuth(); // Using login for simplicity, in a real app this would be a signup function
+  const [isTechnician, setIsTechnician] = useState(false); // Novo estado para a checkbox
+  const { login, loading } = useAuth();
+  const { addTechnician } = useTechnicians(); // Usar o hook de técnicos
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) { // Validar e-mail também
       showError('Por favor, preencha todos os campos.');
       return;
     }
@@ -26,9 +33,14 @@ const SignupPage: React.FC = () => {
       return;
     }
     try {
-      // In a real application, you would have a dedicated signup function here.
-      // For this example, we'll simulate a successful signup by logging in the user.
+      // Simular cadastro e login
       await login(username); 
+      
+      // Se for técnico, adicioná-lo à lista de técnicos
+      if (isTechnician) {
+        addTechnician(username, email); // Adicionar o técnico com nome de usuário e e-mail
+      }
+
       showSuccess('Cadastro realizado com sucesso! Você foi logado automaticamente.');
       navigate('/');
     } catch (error) {
@@ -62,6 +74,18 @@ const SignupPage: React.FC = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu_email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
@@ -84,6 +108,15 @@ const SignupPage: React.FC = () => {
                 required
                 disabled={loading}
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isTechnician"
+                checked={isTechnician}
+                onCheckedChange={(checked) => setIsTechnician(!!checked)}
+                disabled={loading}
+              />
+              <Label htmlFor="isTechnician">Sou Técnico de Manutenção</Label>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Cadastrando...' : 'Cadastrar'}
