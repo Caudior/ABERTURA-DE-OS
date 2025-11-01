@@ -1,8 +1,9 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import Logo from "@/components/Logo"; // Import the new Logo component
+import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Importar Link
+import { Button } from "@/components/ui/button"; // Importar Button
 
 const Index = () => {
   const { session, loading } = useAuth();
@@ -29,7 +30,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
       <div className="text-center space-y-6">
-        <Logo /> {/* Display the logo */}
+        <Logo />
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
           Bem-vindo ao ServiceFlow!
         </h1>
@@ -39,6 +40,11 @@ const Index = () => {
         <p className="text-lg text-gray-500 dark:text-gray-400">
           Navegue usando o menu lateral (em breve) ou comece a gerenciar suas tarefas.
         </p>
+        <Button asChild className="mt-6"> {/* Adicionando o botão aqui */}
+          <Link to="/service-orders">
+            Ver Ordens de Serviço
+          </Link>
+        </Button>
       </div>
       <MadeWithDyad />
     </div>
