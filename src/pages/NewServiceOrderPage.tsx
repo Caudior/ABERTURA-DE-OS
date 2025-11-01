@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,24 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
+import { useAuth } from '@/contexts/AuthContext'; // Importar useAuth
 
 const NewServiceOrderPage: React.FC = () => {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth(); // Usar useAuth
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate("/login"); // Redireciona se não estiver logado
+    } else if (session) {
+      // Extrai o nome de usuário da sessão (formato: user-username-timestamp)
+      const username = session.split('-')[1];
+      setClientName(username || ''); // Define o nome do cliente
+    }
+  }, [session, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +49,18 @@ const NewServiceOrderPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <p className="text-gray-700 dark:text-gray-300">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null; // Já redirecionado pelo useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex justify-center">
@@ -63,7 +87,9 @@ const NewServiceOrderPage: React.FC = () => {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 required
+                readOnly // Campo agora é somente leitura
                 disabled={loading}
+                className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed" // Estilo para indicar que é somente leitura
               />
             </div>
             <div className="space-y-2">
