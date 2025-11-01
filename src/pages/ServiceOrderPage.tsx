@@ -6,60 +6,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useServiceOrders } from '@/contexts/ServiceOrderContext'; // Importar useServiceOrders
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Mock data for service orders
-interface ServiceOrder {
-  id: string;
-  clientName: string;
-  status: 'Pendente' | 'Em Andamento' | 'Concluído' | 'Cancelado';
-  issueDate: string;
-  description: string;
-}
-
-const mockServiceOrders: ServiceOrder[] = [
-  {
-    id: 'OS001',
-    clientName: 'João Silva',
-    status: 'Em Andamento',
-    issueDate: '2023-10-26',
-    description: 'Manutenção preventiva do equipamento X.',
-  },
-  {
-    id: 'OS002',
-    clientName: 'Maria Oliveira',
-    status: 'Pendente',
-    issueDate: '2023-10-25',
-    description: 'Instalação de novo software no servidor.',
-  },
-  {
-    id: 'OS003',
-    clientName: 'Carlos Souza',
-    status: 'Concluído',
-    issueDate: '2023-10-24',
-    description: 'Reparo de hardware na estação de trabalho.',
-  },
-  {
-    id: 'OS004',
-    clientName: 'Ana Costa',
-    status: 'Cancelado',
-    issueDate: '2023-10-23',
-    description: 'Orçamento para upgrade de rede.',
-  },
-];
+// Removido mockServiceOrders, agora vem do contexto
 
 const ServiceOrderPage: React.FC = () => {
-  const { session, loading } = useAuth();
+  const { session, loading: authLoading } = useAuth();
+  const { serviceOrders } = useServiceOrders(); // Obter serviceOrders do contexto
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !session) {
+    if (!authLoading && !session) {
       navigate("/login");
     }
-  }, [session, loading, navigate]);
+  }, [session, authLoading, navigate]);
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <p className="text-gray-700 dark:text-gray-300">Carregando...</p>
@@ -68,7 +32,7 @@ const ServiceOrderPage: React.FC = () => {
   }
 
   if (!session) {
-    return null; // Will redirect to login
+    return null; // Será redirecionado para o login
   }
 
   return (
@@ -87,7 +51,7 @@ const ServiceOrderPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockServiceOrders.map((order) => (
+          {serviceOrders.map((order) => ( // Usar serviceOrders do contexto
             <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center text-lg">
@@ -122,7 +86,7 @@ const ServiceOrderPage: React.FC = () => {
           ))}
         </div>
 
-        {mockServiceOrders.length === 0 && (
+        {serviceOrders.length === 0 && ( // Usar serviceOrders do contexto
           <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
             Nenhuma ordem de serviço encontrada. Crie uma nova!
           </p>

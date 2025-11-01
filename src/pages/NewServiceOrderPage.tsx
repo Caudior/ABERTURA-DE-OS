@@ -9,22 +9,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
-import { useAuth } from '@/contexts/AuthContext'; // Importar useAuth
+import { useAuth } from '@/contexts/AuthContext';
+import { useServiceOrders } from '@/contexts/ServiceOrderContext'; // Importar useServiceOrders
 
 const NewServiceOrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth(); // Usar useAuth
+  const { session, loading: authLoading } = useAuth();
+  const { addServiceOrder } = useServiceOrders(); // Obter addServiceOrder do contexto
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !session) {
-      navigate("/login"); // Redireciona se não estiver logado
+      navigate("/login");
     } else if (session) {
-      // Extrai o nome de usuário da sessão (formato: user-username-timestamp)
       const username = session.split('-')[1];
-      setClientName(username || ''); // Define o nome do cliente
+      setClientName(username || '');
     }
   }, [session, authLoading, navigate]);
 
@@ -37,11 +38,12 @@ const NewServiceOrderPage: React.FC = () => {
       return;
     }
 
-    // Simulate API call for creating a new service order
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      // Adicionar a nova ordem de serviço usando a função do contexto
+      addServiceOrder({ clientName, description });
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
       showSuccess('Ordem de serviço criada com sucesso!');
-      navigate('/service-orders'); // Redirect to the list of service orders
+      navigate('/service-orders');
     } catch (error) {
       showError('Erro ao criar ordem de serviço.');
       console.error('Error creating service order:', error);
@@ -59,7 +61,7 @@ const NewServiceOrderPage: React.FC = () => {
   }
 
   if (!session) {
-    return null; // Já redirecionado pelo useEffect
+    return null;
   }
 
   return (
@@ -87,9 +89,9 @@ const NewServiceOrderPage: React.FC = () => {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 required
-                readOnly // Campo agora é somente leitura
+                readOnly
                 disabled={loading}
-                className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed" // Estilo para indicar que é somente leitura
+                className="bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
               />
             </div>
             <div className="space-y-2">
