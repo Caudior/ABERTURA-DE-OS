@@ -15,23 +15,25 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    {/* Toaster e Sonner movidos para fora do TooltipProvider */}
+    {/* Toaster e Sonner são componentes globais e podem ficar no nível mais alto */}
     <Toaster />
     <Sonner />
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        {/* TooltipProvider agora envolve apenas as rotas, recebendo um único filho (Routes) */}
+        <TooltipProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/service-orders" element={<ServiceOrderPage />} />
             <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
