@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext'; // Importar ServiceOrder para tipos
+import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext';
 import {
   Select,
   SelectContent,
@@ -46,6 +46,18 @@ const ServiceOrderPage: React.FC = () => {
     return order.status === filterStatus;
   });
 
+  const getStatusClasses = (status: ServiceOrder['status']) => {
+    switch (status) {
+      case 'Pendente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'Em Andamento': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'Em Deslocamento': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'; // Novo status
+      case 'Chegou': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300'; // Novo status
+      case 'Concluído': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'Cancelado': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -63,6 +75,8 @@ const ServiceOrderPage: React.FC = () => {
                 <SelectItem value="Todos">Todos</SelectItem>
                 <SelectItem value="Pendente">Pendente</SelectItem>
                 <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem> {/* Adicionado ao filtro */}
+                <SelectItem value="Chegou">Chegou</SelectItem> {/* Adicionado ao filtro */}
                 <SelectItem value="Concluído">Concluído</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
@@ -83,15 +97,7 @@ const ServiceOrderPage: React.FC = () => {
                 <CardTitle className="flex justify-between items-center text-lg">
                   <span>{order.id} - {order.clientName}</span>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      order.status === 'Pendente'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                        : order.status === 'Em Andamento'
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                        : order.status === 'Concluído'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                    }`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClasses(order.status)}`}
                   >
                     {order.status}
                   </span>
@@ -101,7 +107,7 @@ const ServiceOrderPage: React.FC = () => {
                 <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
                 <p><strong>Descrição:</strong> {order.description}</p>
                 <div className="mt-4 flex justify-end">
-                  <Link to={`/service-orders/${order.id}`}>
+                  <Link to={`/service-orders/${order.id}`}> {/* Link atualizado para a página de detalhes */}
                     <Button variant="outline" size="sm">
                       Ver Detalhes
                     </Button>

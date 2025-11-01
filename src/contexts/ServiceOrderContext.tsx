@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 export interface ServiceOrder {
   id: string;
   clientName: string;
-  status: 'Pendente' | 'Em Andamento' | 'Concluído' | 'Cancelado';
+  status: 'Pendente' | 'Em Andamento' | 'Concluído' | 'Cancelado' | 'Em Deslocamento' | 'Chegou'; // Adicionado novos status
   issueDate: string; // Agora armazenará data e hora
   description: string;
 }
@@ -11,6 +11,7 @@ export interface ServiceOrder {
 interface ServiceOrderContextType {
   serviceOrders: ServiceOrder[];
   addServiceOrder: (order: Omit<ServiceOrder, 'id' | 'issueDate' | 'status'>) => void;
+  updateServiceOrderStatus: (id: string, newStatus: ServiceOrder['status']) => void; // Nova função para atualizar status
 }
 
 const ServiceOrderContext = createContext<ServiceOrderContextType | undefined>(undefined);
@@ -72,8 +73,16 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     setServiceOrders((prevOrders) => [...prevOrders, newServiceOrder]);
   };
 
+  const updateServiceOrderStatus = (id: string, newStatus: ServiceOrder['status']) => {
+    setServiceOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === id ? { ...order, status: newStatus } : order
+      )
+    );
+  };
+
   return (
-    <ServiceOrderContext.Provider value={{ serviceOrders, addServiceOrder }}>
+    <ServiceOrderContext.Provider value={{ serviceOrders, addServiceOrder, updateServiceOrderStatus }}>
       {children}
     </ServiceOrderContext.Provider>
   );
