@@ -32,12 +32,14 @@ export const TechnicianProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error('Error fetching technicians:', error);
       showError('Erro ao carregar técnicos.');
     } else {
-      console.log('Fetched technicians data from Supabase:', data); // Log para depuração
-      setTechnicians(data.map(tech => ({
+      console.log('Fetched raw technicians data from Supabase:', data); // Log para depuração dos dados brutos
+      const mappedTechnicians = data.map(tech => ({
         id: tech.id,
         name: tech.full_name || 'Nome Desconhecido',
         email: tech.email || 'Email Desconhecido',
-      })));
+      }));
+      setTechnicians(mappedTechnicians);
+      console.log('Mapped technicians in state:', mappedTechnicians); // Log para depuração dos técnicos mapeados
     }
     setLoadingTechnicians(false);
   };
