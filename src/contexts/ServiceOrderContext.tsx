@@ -60,7 +60,8 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     setLoadingServiceOrders(true);
-    const { data, error } = await supabase
+    // Simplificando a consulta para buscar apenas dados da tabela service_orders
+    const { data: serviceOrdersData, error } = await supabase
       .from('service_orders')
       .select(`
         id,
@@ -69,9 +70,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         status,
         client_id,
         assigned_technician_id,
-        created_by,
-        clients ( name ),
-        profiles ( full_name )
+        created_by
       `);
 
     if (error) {
@@ -79,10 +78,40 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       showError('Erro ao carregar ordens de serviço.');
       setServiceOrders([]);
     } else {
-      const mappedOrders: ServiceOrder[] = data.map((so: any) => ({
+      // Agora, vamos buscar os nomes dos clientes e técnicos separadamente
+      const clientIds = [...new Set(serviceOrdersData.map(so => so.client_id))];
+      const technicianIds = [...new Set(serviceOrdersData.map(so => so.assigned_technician_id).filter(Boolean))];
+
+      let clientsMap = new Map<string, string>();
+      if (clientIds.length > 0) {
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select('id, name')
+          .in('id', clientIds);
+        if (clientsError) {
+          console.error('Error fetching clients:', clientsError);
+        } else {
+          clientsData.forEach(client => clientsMap.set(client.id, client.name));
+        }
+      }
+
+      let profilesMap = new Map<string, string>();
+      if (technicianIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', technicianIds);
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        } else {
+          profilesData.forEach(profile => profilesMap.set(profile.id, profile.full_name || 'Nome Desconhecido'));
+        }
+      }
+
+      const mappedOrders: ServiceOrder[] = serviceOrdersData.map((so: any) => ({
         id: so.id,
         client_id: so.client_id,
-        clientName: so.clients?.name || 'Cliente Desconhecido',
+        clientName: clientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
         status: statusMapFromSupabase[so.status] || 'Pendente', // Mapear status do DB para UI
         issueDate: new Date(so.created_at).toLocaleString('pt-BR', {
@@ -95,7 +124,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
           hour12: false,
         }),
         assigned_technician_id: so.assigned_technician_id,
-        assignedTo: so.profiles?.full_name || undefined,
+        assignedTo: so.assigned_technician_id ? profilesMap.get(so.assigned_technician_id) : undefined,
         created_by: so.created_by,
       }));
       setServiceOrders(mappedOrders);
@@ -173,10 +202,8 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         status,
         client_id,
         assigned_technician_id,
-        created_by,
-        clients ( name ),
-        profiles ( full_name )
-      `)
+        created_by
+      `) // Selecionar apenas colunas diretas
       .single();
 
     if (insertOrderError) {
@@ -185,10 +212,14 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
+    // Após inserir, buscar os nomes para o novo item
+    const clientName = clientsMap.get(insertedOrder.client_id) || newOrderData.clientName; // Usar o nome do cliente recém-criado ou o fornecido
+    const assignedTo = insertedOrder.assigned_technician_id ? profilesMap.get(insertedOrder.assigned_technician_id) : undefined;
+
     const newServiceOrder: ServiceOrder = {
       id: insertedOrder.id,
       client_id: insertedOrder.client_id,
-      clientName: insertedOrder.clients?.name || 'Cliente Desconhecido',
+      clientName: clientName,
       description: insertedOrder.description,
       status: statusMapFromSupabase[insertedOrder.status] || 'Pendente',
       issueDate: new Date(insertedOrder.created_at).toLocaleString('pt-BR', {
@@ -201,7 +232,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         hour12: false,
       }),
       assigned_technician_id: insertedOrder.assigned_technician_id,
-      assignedTo: insertedOrder.profiles?.full_name || undefined,
+      assignedTo: assignedTo,
       created_by: insertedOrder.created_by,
     };
 
