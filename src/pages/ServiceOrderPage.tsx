@@ -129,7 +129,12 @@ const ServiceOrderPage: React.FC = () => {
                 <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
                 <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
                 {order.assignedTo && ( // Mostrar o técnico atribuído se existir
-                  <p className="mb-2"><strong>Técnico:</strong> {order.assignedTo}</p>
+                  <p className="mb-2">
+                    <strong>Técnico:</strong>{' '}
+                    <span className="text-red-600 dark:text-red-400"> {/* Adicionado estilo aqui */}
+                      {order.assignedTo}
+                    </span>
+                  </p>
                 )}
                 <div className="mt-4 flex justify-end">
                   <Link to={`/service-orders/${order.id}`}>
