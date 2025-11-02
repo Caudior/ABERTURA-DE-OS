@@ -54,6 +54,7 @@ const ServiceOrderDetailPage: React.FC = () => {
 
   const handleAssignTechnician = () => {
     if (order && selectedTechnician && selectedTechnician !== order.assignedTo) {
+      console.log(`[DEBUG] ServiceOrderDetailPage: Tentando atribuir técnico. OS ID: ${order.id}, Técnico Selecionado (Nome): ${selectedTechnician}`);
       assignTechnician(order.id, selectedTechnician);
       showSuccess(`OS ${order.id} atribuída a ${selectedTechnician}`);
     } else if (order && !selectedTechnician) {

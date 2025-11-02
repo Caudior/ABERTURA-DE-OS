@@ -280,7 +280,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const technicianId = technicianProfile.id;
 
-    console.log(`Attempting to assign technician ${technicianName} (ID: ${technicianId}) to service order ${id}`);
+    console.log(`[DEBUG] ServiceOrderContext: Atribuindo técnico. OS ID: ${id}, Nome do Técnico: ${technicianName}, ID do Técnico (do profiles): ${technicianId}`);
 
     const { data, error } = await supabase
       .from('service_orders')
