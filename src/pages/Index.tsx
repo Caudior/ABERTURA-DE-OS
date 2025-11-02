@@ -75,11 +75,14 @@ const Index = () => {
               Cadastrar Técnico
             </Button>
           </Link>
-          <Button variant="destructive" onClick={handleLogout}> {/* Botão de Sair */}
+          <Button variant="destructive" onClick={handleLogout}>
             Sair
           </Button>
         </div>
       </div>
+      <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        Versão: V.10.0.0.1
+      </p>
       <MadeWithDyad />
     </div>
   );
