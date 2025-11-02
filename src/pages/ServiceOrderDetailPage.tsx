@@ -165,7 +165,7 @@ const ServiceOrderDetailPage: React.FC = () => {
           {/* Nova seção para atribuição de técnico */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+            <p className="text-lg font-semibold text-red-600 dark:text-red-400"> {/* Alterado aqui */}
               {order.assignedTo || 'Nenhum técnico atribuído'}
             </p>
             <div className="flex gap-2 mt-2">
