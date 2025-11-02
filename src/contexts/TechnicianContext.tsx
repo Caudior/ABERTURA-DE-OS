@@ -12,7 +12,6 @@ export interface Technician {
 
 interface TechnicianContextType {
   technicians: Technician[];
-  // addTechnician: (name: string, email: string) => void; // Removido
   loadingTechnicians: boolean;
 }
 
@@ -33,7 +32,7 @@ export const TechnicianProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error('Error fetching technicians:', error);
       showError('Erro ao carregar técnicos.');
     } else {
-      console.log('Fetched technicians data:', data); // Adicionado log para depuração
+      console.log('Fetched technicians data from Supabase:', data); // Log para depuração
       setTechnicians(data.map(tech => ({
         id: tech.id,
         name: tech.full_name || 'Nome Desconhecido',
@@ -46,8 +45,6 @@ export const TechnicianProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     fetchTechnicians();
   }, []);
-
-  // A função addTechnician foi removida, pois o cadastro de técnicos agora é feito via AuthContext.signup
 
   return (
     <TechnicianContext.Provider value={{ technicians, loadingTechnicians }}>
