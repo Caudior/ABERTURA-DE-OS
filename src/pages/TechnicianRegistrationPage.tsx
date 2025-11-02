@@ -8,16 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTechnicians } from '@/contexts/TechnicianContext';
-import { showError, showSuccess } from '@/utils/toast'; // Importar showSuccess
+import { showError, showSuccess } from '@/utils/toast';
 import Logo from '@/components/Logo';
 
 const TechnicianRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
-  const { addTechnician } = useTechnicians();
-  const [technicianName, setTechnicianName] = useState('');
-  const [technicianEmail, setTechnicianEmail] = useState('');
+  const { session, loading: authLoading, signup } = useAuth(); // Usar a função signup do AuthContext
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -29,25 +29,30 @@ const TechnicianRegistrationPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!technicianName.trim() || !technicianEmail.trim()) {
+    if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
       showError('Por favor, preencha todos os campos.');
+      setLoading(false);
+      return;
+    }
+    if (password !== confirmPassword) {
+      showError('As senhas não coincidem.');
       setLoading(false);
       return;
     }
 
     try {
-      // Aqui, em um cenário real, você faria uma chamada para o Supabase
-      // para criar um novo usuário com a role 'technician' ou adicionar um perfil de técnico.
-      // Por enquanto, vamos usar a função addTechnician do contexto que gerencia a lista local.
-      addTechnician(technicianName.trim(), technicianEmail.trim()); 
-      setTechnicianName('');
-      setTechnicianEmail('');
-      showSuccess(`Técnico "${technicianName.trim()}" cadastrado com sucesso!`);
+      // Chamar a função signup do AuthContext, definindo isTechnician como true
+      await signup(fullName.trim(), email.trim(), password, true); 
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      showSuccess(`Técnico "${fullName.trim()}" cadastrado com sucesso! Um e-mail de confirmação foi enviado.`);
       await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
       navigate('/'); // Redirecionar para a página inicial
-    } catch (error) {
-      console.error('Error adding technician:', error);
-      showError('Erro ao cadastrar técnico.');
+    } catch (error: any) {
+      console.error('Error registering technician:', error);
+      showError(error.message || 'Erro ao cadastrar técnico. Verifique se o e-mail já está em uso.');
     } finally {
       setLoading(false);
     }
@@ -76,20 +81,20 @@ const TechnicianRegistrationPage: React.FC = () => {
             <Logo />
             <div>
               <CardTitle className="text-2xl font-bold">Cadastrar Técnico</CardTitle>
-              <CardDescription>Adicione um novo técnico à equipe.</CardDescription>
+              <CardDescription>Crie uma nova conta para um técnico.</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="technicianName">Nome do Técnico</Label>
+              <Label htmlFor="fullName">Nome Completo</Label>
               <Input
-                id="technicianName"
+                id="fullName"
                 type="text"
                 placeholder="Nome completo do técnico"
-                value={technicianName}
-                onChange={(e) => setTechnicianName(e.target.value)}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -100,8 +105,32 @@ const TechnicianRegistrationPage: React.FC = () => {
                 id="technicianEmail"
                 type="email"
                 placeholder="email@example.com"
-                value={technicianEmail}
-                onChange={(e) => setTechnicianEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmar Senha</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="********"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
               />

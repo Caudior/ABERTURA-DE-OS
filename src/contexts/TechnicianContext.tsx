@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { showSuccess, showError } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +12,7 @@ export interface Technician {
 
 interface TechnicianContextType {
   technicians: Technician[];
-  addTechnician: (name: string, email: string) => void;
+  // addTechnician: (name: string, email: string) => void; // Removido
   loadingTechnicians: boolean;
 }
 
@@ -31,6 +33,7 @@ export const TechnicianProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error('Error fetching technicians:', error);
       showError('Erro ao carregar técnicos.');
     } else {
+      console.log('Fetched technicians data:', data); // Adicionado log para depuração
       setTechnicians(data.map(tech => ({
         id: tech.id,
         name: tech.full_name || 'Nome Desconhecido',
@@ -44,27 +47,10 @@ export const TechnicianProvider: React.FC<{ children: ReactNode }> = ({ children
     fetchTechnicians();
   }, []);
 
-  const addTechnician = async (name: string, email: string) => {
-    // No Supabase, o técnico é adicionado via signup.
-    // Esta função é mais para garantir que o contexto local seja atualizado
-    // ou para adicionar técnicos que já existem no Supabase mas não no estado local.
-    if (technicians.some(tech => tech.email.toLowerCase() === email.toLowerCase())) {
-      showError(`O e-mail "${email}" já está em uso por um técnico.`);
-      return;
-    }
-    // Se o técnico já foi criado via signup, ele será buscado no fetchTechnicians.
-    // Para fins de demonstração, se for chamado diretamente, podemos adicionar ao estado local.
-    // Em um cenário real, a adição de um técnico seria feita através do signup ou de uma interface de administração.
-    const newId = `tech-${Date.now()}`; // Gerar um ID temporário para o contexto local
-    const newTechnician: Technician = { id: newId, name, email };
-    setTechnicians((prevTechs) => [...prevTechs, newTechnician]);
-    showSuccess(`Técnico "${name}" cadastrado com sucesso!`);
-    // Após adicionar, re-fetch para garantir consistência com o Supabase se houver um delay no trigger
-    fetchTechnicians(); 
-  };
+  // A função addTechnician foi removida, pois o cadastro de técnicos agora é feito via AuthContext.signup
 
   return (
-    <TechnicianContext.Provider value={{ technicians, addTechnician, loadingTechnicians }}>
+    <TechnicianContext.Provider value={{ technicians, loadingTechnicians }}>
       {children}
     </TechnicianContext.Provider>
   );
