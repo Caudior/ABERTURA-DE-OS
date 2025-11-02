@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/Auth/AuthContext'; // Importar useAuth para obter a role
+import { useAuth } from '@/contexts/AuthContext'; // Caminho corrigido
 import { showSuccess, showError } from '@/utils/toast';
 
 // Mapeamento de status da UI para o Supabase (assumindo enum em inglês no DB)
