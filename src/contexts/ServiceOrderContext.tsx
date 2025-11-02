@@ -244,15 +244,16 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status']) => {
     const supabaseStatus = statusMapToSupabase[newStatus];
-    const { error } = await supabase
+    const { data, error } = await supabase // Capturar data e error
       .from('service_orders')
       .update({ status: supabaseStatus })
       .eq('id', id);
 
     if (error) {
-      console.error('Error updating service order status:', error);
-      showError('Erro ao atualizar status da ordem de serviço.');
+      console.error('Supabase Error updating service order status:', error);
+      showError(error.message || 'Erro ao atualizar status da ordem de serviço.');
     } else {
+      console.log('Supabase Success updating service order status:', data);
       setServiceOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === id ? { ...order, status: newStatus } : order
@@ -279,15 +280,18 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const technicianId = technicianProfile.id;
 
-    const { error } = await supabase
+    console.log(`Attempting to assign technician ${technicianName} (ID: ${technicianId}) to service order ${id}`);
+
+    const { data, error } = await supabase
       .from('service_orders')
       .update({ assigned_technician_id: technicianId })
       .eq('id', id);
 
     if (error) {
-      console.error('Error assigning technician:', error);
-      showError('Erro ao atribuir técnico à ordem de serviço.');
+      console.error('Supabase Error assigning technician:', error);
+      showError(error.message || 'Erro ao atribuir técnico à ordem de serviço.');
     } else {
+      console.log('Supabase Success assigning technician:', data);
       setServiceOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === id ? { ...order, assignedTo: technicianName, assigned_technician_id: technicianId } : order
