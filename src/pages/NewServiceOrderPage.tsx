@@ -11,11 +11,11 @@ import { ChevronLeft } from 'lucide-react';
 import { showSuccess, showError } from '@/utils/toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServiceOrders } from '@/contexts/ServiceOrderContext';
-import Logo from '@/components/Logo'; // Importar o componente Logo
+import Logo from '@/components/Logo';
 
 const NewServiceOrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session, username, loading: authLoading } = useAuth(); // Obter username diretamente
   const { addServiceOrder } = useServiceOrders();
   const [clientName, setClientName] = useState('');
   const [description, setDescription] = useState('');
@@ -24,11 +24,10 @@ const NewServiceOrderPage: React.FC = () => {
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/login");
-    } else if (session) {
-      const username = session.split('-')[1];
-      setClientName(username || '');
+    } else if (session && username) { // Usar username do contexto
+      setClientName(username);
     }
-  }, [session, authLoading, navigate]);
+  }, [session, authLoading, navigate, username]); // Adicionar username às dependências
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +60,10 @@ const NewServiceOrderPage: React.FC = () => {
   }
 
   if (!session) {
-    return null;
+    // Se não há sessão e não está carregando, o useEffect já deveria ter redirecionado.
+    // Retornar null aqui pode ser um problema se o redirecionamento falhar por algum motivo.
+    // É melhor garantir que o redirecionamento ocorra antes de renderizar qualquer coisa.
+    return null; 
   }
 
   return (
@@ -72,7 +74,7 @@ const NewServiceOrderPage: React.FC = () => {
             <Button variant="outline" size="icon" onClick={() => navigate('/service-orders')}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Logo /> {/* Adicionar o Logo aqui */}
+            <Logo />
             <div>
               <CardTitle className="text-2xl font-bold">Nova Ordem de Serviço</CardTitle>
               <CardDescription>Preencha os detalhes para criar uma nova ordem.</CardDescription>
