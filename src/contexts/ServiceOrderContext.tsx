@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/Auth/AuthContext'; // Importar useAuth para obter a role
 import { showSuccess, showError } from '@/utils/toast';
 
 // Mapeamento de status da UI para o Supabase (assumindo enum em inglês no DB)
@@ -48,11 +48,11 @@ interface ServiceOrderContextType {
 const ServiceOrderContext = createContext<ServiceOrderContextType | undefined>(undefined);
 
 export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { session, username, loading: authLoading } = useAuth();
+  const { session, username, userRole, loading: authLoading } = useAuth(); // Obter userRole
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [loadingServiceOrders, setLoadingServiceOrders] = useState(true);
-  const [clientsMap, setClientsMap] = useState<Map<string, string>>(new Map()); // Movido para o estado
-  const [profilesMap, setProfilesMap] = useState<Map<string, string>>(new Map()); // Movido para o estado
+  const [clientsMap, setClientsMap] = useState<Map<string, string>>(new Map());
+  const [profilesMap, setProfilesMap] = useState<Map<string, string>>(new Map());
 
   const fetchServiceOrders = async () => {
     if (!session) {
@@ -94,7 +94,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
           clientsData.forEach(client => currentClientsMap.set(client.id, client.name));
         }
       }
-      setClientsMap(currentClientsMap); // Atualiza o estado
+      setClientsMap(currentClientsMap);
 
       let currentProfilesMap = new Map<string, string>();
       if (technicianIds.length > 0) {
@@ -108,7 +108,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
           profilesData.forEach(profile => currentProfilesMap.set(profile.id, profile.full_name || 'Nome Desconhecido'));
         }
       }
-      setProfilesMap(currentProfilesMap); // Atualiza o estado
+      setProfilesMap(currentProfilesMap);
 
       const mappedOrders: ServiceOrder[] = serviceOrdersData.map((so: any) => ({
         id: so.id,
@@ -244,7 +244,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status']) => {
     const supabaseStatus = statusMapToSupabase[newStatus];
-    const { data, error } = await supabase // Capturar data e error
+    const { data, error } = await supabase
       .from('service_orders')
       .update({ status: supabaseStatus })
       .eq('id', id);
@@ -264,6 +264,11 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const assignTechnician = async (id: string, technicianName: string) => {
+    if (userRole !== 'admin') { // Verificação de função
+      showError('Apenas administradores podem atribuir técnicos.');
+      return;
+    }
+
     // Buscar o ID do técnico pelo nome
     const { data: technicianProfile, error: techError } = await supabase
       .from('profiles')

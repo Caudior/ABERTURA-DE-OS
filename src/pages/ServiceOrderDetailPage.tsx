@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext';
-import { useTechnicians } from '@/contexts/TechnicianContext'; // Importar o novo hook
+import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronLeft } from 'lucide-react';
@@ -20,9 +20,9 @@ import { showSuccess, showError } from '@/utils/toast';
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, userRole } = useAuth(); // Obter userRole
   const { serviceOrders, updateServiceOrderStatus, assignTechnician } = useServiceOrders();
-  const { technicians } = useTechnicians(); // Usar o hook para obter a lista de técnicos
+  const { technicians } = useTechnicians();
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
@@ -106,6 +106,8 @@ const ServiceOrderDetailPage: React.FC = () => {
     }
   };
 
+  const isAdmin = userRole === 'admin';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex justify-center">
       <Card className="w-full max-w-2xl">
@@ -162,30 +164,32 @@ const ServiceOrderDetailPage: React.FC = () => {
             </Select>
           </div>
 
-          {/* Nova seção para atribuição de técnico */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
-            <p className="text-lg font-semibold text-red-600 dark:text-red-400"> {/* Alterado aqui */}
-              {order.assignedTo || 'Nenhum técnico atribuído'}
-            </p>
-            <div className="flex gap-2 mt-2">
-              <Select value={selectedTechnician} onValueChange={setSelectedTechnician}>
-                <SelectTrigger className="flex-grow">
-                  <SelectValue placeholder="Atribuir Técnico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {technicians.map((tech) => (
-                    <SelectItem key={tech.id} value={tech.name}>
-                      {tech.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAssignTechnician} disabled={!selectedTechnician || selectedTechnician === order.assignedTo}>
-                Atribuir
-              </Button>
+          {/* Seção para atribuição de técnico - visível apenas para administradores */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
+              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                {order.assignedTo || 'Nenhum técnico atribuído'}
+              </p>
+              <div className="flex gap-2 mt-2">
+                <Select value={selectedTechnician} onValueChange={setSelectedTechnician}>
+                  <SelectTrigger className="flex-grow">
+                    <SelectValue placeholder="Atribuir Técnico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {technicians.map((tech) => (
+                      <SelectItem key={tech.id} value={tech.name}>
+                        {tech.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAssignTechnician} disabled={!selectedTechnician || selectedTechnician === order.assignedTo}>
+                  Atribuir
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
