@@ -64,21 +64,21 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     setLoadingServiceOrders(true);
+    // Temporariamente removendo a coluna 'status' para diagnóstico
     const { data: serviceOrdersData, error } = await supabase
       .from('service_orders')
       .select(`
         id,
-        order_number, -- Selecionar o novo campo
+        order_number,
         created_at,
         description,
-        status,
         client_id,
         assigned_technician_id,
         created_by
       `);
 
     if (error) {
-      console.error('Error fetching service orders:', error);
+      console.error('Error fetching service orders (status column excluded):', error);
       showError('Erro ao carregar ordens de serviço.');
       setServiceOrders([]);
     } else {
@@ -115,11 +115,11 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       const mappedOrders: ServiceOrder[] = serviceOrdersData.map((so: any) => ({
         id: so.id,
-        orderNumber: so.order_number, // Mapear o order_number
+        orderNumber: so.order_number,
         client_id: so.client_id,
         clientName: currentClientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
-        status: statusMapFromSupabase[so.status] || 'Pendente',
+        status: 'Pendente', // Definir um status padrão já que não estamos buscando do DB
         issueDate: new Date(so.created_at).toLocaleString('pt-BR', {
           year: 'numeric',
           month: '2-digit',
@@ -203,7 +203,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       })
       .select(`
         id,
-        order_number, -- Selecionar o novo campo
+        order_number,
         created_at,
         description,
         status,
@@ -225,7 +225,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const newServiceOrder: ServiceOrder = {
       id: insertedOrder.id,
-      orderNumber: insertedOrder.order_number, // Mapear o order_number
+      orderNumber: insertedOrder.order_number,
       client_id: insertedOrder.client_id,
       clientName: clientName,
       description: insertedOrder.description,
