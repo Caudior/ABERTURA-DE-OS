@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext'; // Caminho corrigido
+import { useAuth } from '@/contexts/AuthContext';
 import { showSuccess, showError } from '@/utils/toast';
 
 // Mapeamento de status da UI para o Supabase (assumindo enum em inglês no DB)
@@ -40,7 +40,7 @@ export interface ServiceOrder {
 interface ServiceOrderContextType {
   serviceOrders: ServiceOrder[];
   addServiceOrder: (order: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo'>) => Promise<void>;
-  updateServiceOrderStatus: (id: string, newStatus: ServiceOrder['status']) => Promise<void>;
+  updateServiceOrderStatus: (id: string, newStatus: ServiceOrder['status'], notes?: string) => Promise<void>;
   assignTechnician: (id: string, technicianName: string) => Promise<void>;
   loadingServiceOrders: boolean;
 }
@@ -48,7 +48,7 @@ interface ServiceOrderContextType {
 const ServiceOrderContext = createContext<ServiceOrderContextType | undefined>(undefined);
 
 export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { session, username, userRole, loading: authLoading } = useAuth(); // Obter userRole
+  const { session, username, userRole, loading: authLoading } = useAuth();
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [loadingServiceOrders, setLoadingServiceOrders] = useState(true);
   const [clientsMap, setClientsMap] = useState<Map<string, string>>(new Map());
@@ -242,34 +242,90 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     showSuccess('Ordem de serviço criada com sucesso!');
   };
 
-  const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status']) => {
+  const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status'], notes?: string) => {
+    if (!session?.user?.id) {
+      showError('Usuário não autenticado.');
+      return;
+    }
+    const currentUserId = session.user.id;
     const supabaseStatus = statusMapToSupabase[newStatus];
-    const { data, error } = await supabase
+
+    // Primeiro, obtenha o status atual para registrar no histórico
+    const { data: currentOrderData, error: fetchError } = await supabase
+      .from('service_orders')
+      .select('status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentOrderData) {
+      console.error('Error fetching current service order status:', fetchError);
+      showError('Erro ao obter status atual da ordem de serviço.');
+      return;
+    }
+
+    const previousSupabaseStatus = currentOrderData.status;
+    const previousUiStatus = statusMapFromSupabase[previousSupabaseStatus] || 'Pendente';
+
+    // Atualiza o status na tabela principal de ordens de serviço
+    const { error: updateError } = await supabase
       .from('service_orders')
       .update({ status: supabaseStatus })
       .eq('id', id);
 
-    if (error) {
-      console.error('Supabase Error updating service order status:', error);
-      showError(error.message || 'Erro ao atualizar status da ordem de serviço.');
-    } else {
-      console.log('Supabase Success updating service order status:', data);
-      setServiceOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === id ? { ...order, status: newStatus } : order
-        )
-      );
-      showSuccess(`Status da OS ${id} atualizado para "${newStatus}"`);
+    if (updateError) {
+      console.error('Supabase Error updating service order status:', updateError);
+      showError(updateError.message || 'Erro ao atualizar status da ordem de serviço.');
+      return;
     }
+
+    // Se o status for 'Concluído' e houver notas, insere no histórico
+    if (newStatus === 'Concluído' && notes) {
+      const { error: historyError } = await supabase
+        .from('service_order_history')
+        .insert({
+          service_order_id: id,
+          status_change_from: previousSupabaseStatus,
+          status_change_to: supabaseStatus,
+          changed_by: currentUserId,
+          notes: notes,
+        });
+
+      if (historyError) {
+        console.error('Supabase Error inserting service order history:', historyError);
+        showError('Erro ao registrar histórico da ordem de serviço.');
+      }
+    } else if (newStatus !== 'Concluído' && newStatus !== previousUiStatus) {
+      // Para outras mudanças de status, registre no histórico sem notas específicas
+      const { error: historyError } = await supabase
+        .from('service_order_history')
+        .insert({
+          service_order_id: id,
+          status_change_from: previousSupabaseStatus,
+          status_change_to: supabaseStatus,
+          changed_by: currentUserId,
+          notes: `Status alterado de '${previousUiStatus}' para '${newStatus}'.`,
+        });
+
+      if (historyError) {
+        console.error('Supabase Error inserting service order history for status change:', historyError);
+        showError('Erro ao registrar histórico da ordem de serviço.');
+      }
+    }
+
+    setServiceOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === id ? { ...order, status: newStatus } : order
+      )
+    );
+    showSuccess(`Status da OS ${id} atualizado para "${newStatus}"`);
   };
 
   const assignTechnician = async (id: string, technicianName: string) => {
-    if (userRole !== 'admin') { // Verificação de função
+    if (userRole !== 'admin') {
       showError('Apenas administradores podem atribuir técnicos.');
       return;
     }
 
-    // Buscar o ID do técnico pelo nome
     const { data: technicianProfile, error: techError } = await supabase
       .from('profiles')
       .select('id')
@@ -285,9 +341,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const technicianId = technicianProfile.id;
 
-    console.log(`[DEBUG] ServiceOrderContext: Atribuindo técnico. OS ID: ${id}, Nome do Técnico: ${technicianName}, ID do Técnico (do profiles): ${technicianId}`);
-
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('service_orders')
       .update({ assigned_technician_id: technicianId })
       .eq('id', id);
@@ -296,7 +350,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       console.error('Supabase Error assigning technician:', error);
       showError(error.message || 'Erro ao atribuir técnico à ordem de serviço.');
     } else {
-      console.log('Supabase Success assigning technician:', data);
       setServiceOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === id ? { ...order, assignedTo: technicianName, assigned_technician_id: technicianId } : order

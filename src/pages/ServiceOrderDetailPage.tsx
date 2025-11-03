@@ -15,17 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from '@/components/ui/textarea'; // Importar Textarea
+import { Label } from '@/components/ui/label'; // Importar Label
 import { showSuccess, showError } from '@/utils/toast';
 
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { session, loading: authLoading, userRole } = useAuth(); // Obter userRole
+  const { session, loading: authLoading, userRole } = useAuth();
   const { serviceOrders, updateServiceOrderStatus, assignTechnician } = useServiceOrders();
   const { technicians } = useTechnicians();
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
+  const [technicianNotes, setTechnicianNotes] = useState(''); // Novo estado para as observações
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -44,19 +47,23 @@ const ServiceOrderDetailPage: React.FC = () => {
     }
   }, [id, serviceOrders]);
 
-  const handleStatusChange = (newStatus: ServiceOrder['status']) => {
+  const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
     if (order && newStatus !== currentStatus) {
-      updateServiceOrderStatus(order.id, newStatus);
+      if (newStatus === 'Concluído' && !technicianNotes.trim()) {
+        showError('Por favor, adicione as observações do técnico para finalizar a OS.');
+        return;
+      }
+      await updateServiceOrderStatus(order.id, newStatus, newStatus === 'Concluído' ? technicianNotes : undefined);
       setCurrentStatus(newStatus);
-      showSuccess(`Status da OS ${order.id} atualizado para "${newStatus}"`);
+      if (newStatus === 'Concluído') {
+        setTechnicianNotes(''); // Limpar notas após salvar
+      }
     }
   };
 
   const handleAssignTechnician = () => {
     if (order && selectedTechnician && selectedTechnician !== order.assignedTo) {
-      console.log(`[DEBUG] ServiceOrderDetailPage: Tentando atribuir técnico. OS ID: ${order.id}, Técnico Selecionado (Nome): ${selectedTechnician}`);
       assignTechnician(order.id, selectedTechnician);
-      showSuccess(`OS ${order.id} atribuída a ${selectedTechnician}`);
     } else if (order && !selectedTechnician) {
       showError('Por favor, selecione um técnico para atribuir.');
     }
@@ -106,7 +113,8 @@ const ServiceOrderDetailPage: React.FC = () => {
     }
   };
 
-  const isAdmin = userRole === 'admin';
+  const isAdminOrTechnician = userRole === 'admin' || userRole === 'technician';
+  const isCompleted = currentStatus === 'Concluído';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex justify-center">
@@ -147,25 +155,43 @@ const ServiceOrderDetailPage: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Atualizar Status</p>
-            <Select value={currentStatus} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um novo status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Pendente">Pendente</SelectItem>
-                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem>
-                <SelectItem value="Chegou">Chegou</SelectItem>
-                <SelectItem value="Concluído">Concluído</SelectItem>
-                <SelectItem value="Cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {isAdminOrTechnician && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Atualizar Status</p>
+              <Select value={currentStatus} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um novo status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pendente">Pendente</SelectItem>
+                  <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                  <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem>
+                  <SelectItem value="Chegou">Chegou</SelectItem>
+                  <SelectItem value="Concluído">Concluído</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Campo de observações do técnico - visível e editável apenas para admin/technician ao finalizar */}
+          {(isAdminOrTechnician && (currentStatus === 'Concluído' || (currentStatus !== 'Concluído' && order.status !== 'Concluído'))) && (
+            <div className="space-y-2">
+              <Label htmlFor="technicianNotes">Observações do Técnico (ao finalizar)</Label>
+              <Textarea
+                id="technicianNotes"
+                placeholder="Descreva as observações finais ou o que foi feito para concluir o serviço."
+                value={technicianNotes}
+                onChange={(e) => setTechnicianNotes(e.target.value)}
+                rows={4}
+                disabled={isCompleted && userRole !== 'admin'} // Desabilita se concluído e não for admin
+                className={isCompleted && userRole !== 'admin' ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
+              />
+            </div>
+          )}
 
           {/* Seção para atribuição de técnico - visível apenas para administradores */}
-          {isAdmin && (
+          {isAdminOrTechnician && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
               <p className="text-lg font-semibold text-red-600 dark:text-red-400">
