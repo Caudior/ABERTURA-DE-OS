@@ -64,7 +64,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     setLoadingServiceOrders(true);
-    // Temporariamente removendo a coluna 'status' para diagnóstico
+    // Re-adicionando a coluna 'status' com casting para texto e garantindo 'order_number'
     const { data: serviceOrdersData, error } = await supabase
       .from('service_orders')
       .select(`
@@ -72,13 +72,14 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         order_number,
         created_at,
         description,
+        status::text,
         client_id,
         assigned_technician_id,
         created_by
       `);
 
     if (error) {
-      console.error('Error fetching service orders (status column excluded):', error);
+      console.error('Error fetching service orders:', error);
       showError('Erro ao carregar ordens de serviço.');
       setServiceOrders([]);
     } else {
@@ -119,7 +120,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         client_id: so.client_id,
         clientName: currentClientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
-        status: 'Pendente', // Definir um status padrão já que não estamos buscando do DB
+        status: statusMapFromSupabase[so.status] || 'Pendente', // Usar o status real do DB
         issueDate: new Date(so.created_at).toLocaleString('pt-BR', {
           year: 'numeric',
           month: '2-digit',
