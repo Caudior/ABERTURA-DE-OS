@@ -27,6 +27,7 @@ const statusMapFromSupabase: Record<string, ServiceOrder['status']> = {
 
 export interface ServiceOrder {
   id: string;
+  orderNumber?: number; // Adicionado o novo campo para o número sequencial
   client_id: string;
   clientName: string; // Para exibição, derivado de client_id
   description: string;
@@ -39,7 +40,7 @@ export interface ServiceOrder {
 
 interface ServiceOrderContextType {
   serviceOrders: ServiceOrder[];
-  addServiceOrder: (order: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo'>) => Promise<void>;
+  addServiceOrder: (order: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo' | 'orderNumber'>) => Promise<void>;
   updateServiceOrderStatus: (id: string, newStatus: ServiceOrder['status'], notes?: string) => Promise<void>;
   assignTechnician: (id: string, technicianName: string) => Promise<void>;
   loadingServiceOrders: boolean;
@@ -66,6 +67,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .from('service_orders')
       .select(`
         id,
+        order_number, -- Selecionar o novo campo
         created_at,
         description,
         status,
@@ -112,6 +114,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       const mappedOrders: ServiceOrder[] = serviceOrdersData.map((so: any) => ({
         id: so.id,
+        orderNumber: so.order_number, // Mapear o order_number
         client_id: so.client_id,
         clientName: currentClientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
@@ -143,7 +146,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [session, authLoading]);
 
-  const addServiceOrder = async (newOrderData: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo'>) => {
+  const addServiceOrder = async (newOrderData: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo' | 'orderNumber'>) => {
     if (!session?.user?.id) {
       showError('Usuário não autenticado.');
       return;
@@ -199,6 +202,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       })
       .select(`
         id,
+        order_number, -- Selecionar o novo campo
         created_at,
         description,
         status,
@@ -220,6 +224,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const newServiceOrder: ServiceOrder = {
       id: insertedOrder.id,
+      orderNumber: insertedOrder.order_number, // Mapear o order_number
       client_id: insertedOrder.client_id,
       clientName: clientName,
       description: insertedOrder.description,

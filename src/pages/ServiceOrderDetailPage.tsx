@@ -148,14 +148,16 @@ const ServiceOrderDetailPage: React.FC = () => {
             </Button>
             <div>
               <CardTitle className="text-2xl font-bold">Detalhes da Ordem de Serviço</CardTitle>
-              <CardDescription>Informações e atualização da OS {order.id}</CardDescription>
+              <CardDescription>OS #{order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">ID da Ordem</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{order.id}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Número da Ordem</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+              #{order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)}
+            </p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Nome do Cliente</p>

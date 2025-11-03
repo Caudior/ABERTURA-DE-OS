@@ -117,7 +117,8 @@ const ServiceOrderPage: React.FC = () => {
             <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center text-lg">
-                  <span>{order.id} - {order.clientName}</span>
+                  {/* Exibir orderNumber formatado, se existir, senão o ID original */}
+                  <span>OS #{order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)} - {order.clientName}</span>
                   <span
                     className={getStatusClasses(order)} // Usar a nova função getStatusClasses
                   >
