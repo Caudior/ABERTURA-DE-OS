@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders, ServiceOrder } from '@/contexts/ServiceOrderContext';
+import { useServiceOrders, ServiceOrder, statusMapToSupabase } from '@/contexts/ServiceOrderContext'; // Importar statusMapToSupabase
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from '@/components/ui/textarea'; // Importar Textarea
-import { Label } from '@/components/ui/label'; // Importar Label
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from '@/integrations/supabase/client'; // Importar supabase client
 
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ const ServiceOrderDetailPage: React.FC = () => {
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
-  const [technicianNotes, setTechnicianNotes] = useState(''); // Novo estado para as observações
+  const [technicianNotes, setTechnicianNotes] = useState('');
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -43,9 +44,31 @@ const ServiceOrderDetailPage: React.FC = () => {
       if (foundOrder) {
         setCurrentStatus(foundOrder.status);
         setSelectedTechnician(foundOrder.assignedTo);
+
+        // Carregar observações existentes se a OS já estiver concluída
+        if (foundOrder.status === 'Concluído') {
+          fetchTechnicianNotes(foundOrder.id);
+        }
       }
     }
   }, [id, serviceOrders]);
+
+  const fetchTechnicianNotes = async (orderId: string) => {
+    const { data, error } = await supabase
+      .from('service_order_history')
+      .select('notes')
+      .eq('service_order_id', orderId)
+      .eq('status_change_to', statusMapToSupabase['Concluído'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
+      console.error('Error fetching technician notes:', error);
+    } else if (data) {
+      setTechnicianNotes(data.notes || '');
+    }
+  };
 
   const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
     if (order && newStatus !== currentStatus) {
@@ -55,9 +78,8 @@ const ServiceOrderDetailPage: React.FC = () => {
       }
       await updateServiceOrderStatus(order.id, newStatus, newStatus === 'Concluído' ? technicianNotes : undefined);
       setCurrentStatus(newStatus);
-      if (newStatus === 'Concluído') {
-        setTechnicianNotes(''); // Limpar notas após salvar
-      }
+      // Não limpar as notas aqui, pois elas podem ter sido salvas e devem ser exibidas
+      // O useEffect de carregamento de notas cuidará de preencher se a página for recarregada
     }
   };
 
@@ -175,7 +197,7 @@ const ServiceOrderDetailPage: React.FC = () => {
           )}
 
           {/* Campo de observações do técnico - visível e editável apenas para admin/technician ao finalizar */}
-          {(isAdminOrTechnician && (currentStatus === 'Concluído' || (currentStatus !== 'Concluído' && order.status !== 'Concluído'))) && (
+          {isAdminOrTechnician && (
             <div className="space-y-2">
               <Label htmlFor="technicianNotes">Observações do Técnico (ao finalizar)</Label>
               <Textarea
@@ -184,7 +206,7 @@ const ServiceOrderDetailPage: React.FC = () => {
                 value={technicianNotes}
                 onChange={(e) => setTechnicianNotes(e.target.value)}
                 rows={4}
-                disabled={isCompleted && userRole !== 'admin'} // Desabilita se concluído e não for admin
+                disabled={isCompleted && userRole !== 'admin'}
                 className={isCompleted && userRole !== 'admin' ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
               />
             </div>
