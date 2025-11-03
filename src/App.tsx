@@ -17,33 +17,36 @@ import TechnicianRegistrationPage from "./pages/TechnicianRegistrationPage"; // 
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <TechnicianProvider> {/* Envolver com TechnicianProvider */}
-            <ServiceOrderProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/service-orders" element={<ServiceOrderPage />} />
-                <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
-                <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
-                <Route path="/technician-dashboard" element={<TechnicianDashboardPage />} />
-                <Route path="/register-technician" element={<TechnicianRegistrationPage />} /> {/* Nova rota */}
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </ServiceOrderProvider>
-          </TechnicianProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('App component is rendering'); // Adicionado para depuração
+  return (
+    <QueryClientProvider client={queryClient}>
+      <>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <TechnicianProvider> {/* Envolver com TechnicianProvider */}
+              <ServiceOrderProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/service-orders" element={<ServiceOrderPage />} />
+                  <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
+                  <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+                  <Route path="/technician-dashboard" element={<TechnicianDashboardPage />} />
+                  <Route path="/register-technician" element={<TechnicianRegistrationPage />} /> {/* Nova rota */}
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ServiceOrderProvider>
+            </TechnicianProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

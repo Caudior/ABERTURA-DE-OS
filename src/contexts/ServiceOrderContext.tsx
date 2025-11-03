@@ -49,6 +49,7 @@ interface ServiceOrderContextType {
 const ServiceOrderContext = createContext<ServiceOrderContextType | undefined>(undefined);
 
 export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  console.log('ServiceOrderProvider is rendering'); // Adicionado para depuração
   const { session, username, userRole, loading: authLoading } = useAuth();
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [loadingServiceOrders, setLoadingServiceOrders] = useState(true);
