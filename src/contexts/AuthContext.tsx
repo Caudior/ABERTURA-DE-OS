@@ -16,6 +16,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  console.log('AuthContext: AuthProvider component rendering...'); // Novo log
   const [session, setSession] = useState<Session | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -31,7 +32,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     if (error) {
       console.error('AuthContext: Error fetching user profile:', error);
-      setUserRole(null);
+      // Se o perfil não for encontrado, pode ser um novo usuário, então definimos um papel padrão.
+      setUserRole(null); // Manter null para indicar que não foi encontrado no DB
       return null;
     }
     console.log('AuthContext: User profile fetched:', data);
@@ -49,8 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUsername(profile.full_name || session.user.email?.split('@')[0] || null);
           setUserRole(profile.role);
         } else {
+          // Se o perfil não for encontrado, o usuário pode ser novo ou a criação do perfil falhou.
+          // Definir nome de usuário e função padrão com base no e-mail.
           setUsername(session.user.email?.split('@')[0] || null);
-          setUserRole(null);
+          setUserRole('client'); // Função padrão se o perfil não for encontrado
+          console.warn('AuthContext: User profile not found, defaulting role to "client".');
         }
       } else {
         setUsername(null);
@@ -70,7 +75,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUserRole(profile.role);
         } else {
           setUsername(session.user.email?.split('@')[0] || null);
-          setUserRole(null);
+          setUserRole('client'); // Função padrão se o perfil não for encontrado
+          console.warn('AuthContext: User profile not found during initial getSession, defaulting role to "client".');
         }
       } else {
         setUsername(null);
