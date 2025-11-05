@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders, ServiceOrder, statusMapToSupabase } from '@/contexts/ServiceOrderContext'; // Importar statusMapToSupabase
+import { useServiceOrders, ServiceOrder, statusMapToSupabase } from '@/contexts/ServiceOrderContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,18 +18,19 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { showSuccess, showError } from '@/utils/toast';
-import { supabase } from '@/integrations/supabase/client'; // Importar supabase client
+import { supabase } from '@/integrations/supabase/client';
 
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { session, loading: authLoading, userRole } = useAuth();
-  const { serviceOrders, updateServiceOrderStatus, assignTechnician } = useServiceOrders();
+  const { serviceOrders, updateServiceOrderStatus, assignTechnician, addServiceOrderHistoryNote } = useServiceOrders();
   const { technicians } = useTechnicians();
   const [order, setOrder] = useState<ServiceOrder | undefined>(undefined);
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
   const [technicianNotes, setTechnicianNotes] = useState('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false); // Novo estado para o botão de salvar observações
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -45,9 +46,11 @@ const ServiceOrderDetailPage: React.FC = () => {
         setCurrentStatus(foundOrder.status);
         setSelectedTechnician(foundOrder.assignedTo);
 
-        // Carregar observações existentes se a OS já estiver concluída
+        // Carregar a última observação se a OS estiver concluída, senão limpar o campo
         if (foundOrder.status === 'Concluído') {
           fetchTechnicianNotes(foundOrder.id);
+        } else {
+          setTechnicianNotes(''); // Limpar para novas observações
         }
       }
     }
@@ -58,7 +61,7 @@ const ServiceOrderDetailPage: React.FC = () => {
       .from('service_order_history')
       .select('notes')
       .eq('service_order_id', orderId)
-      .eq('status_change_to', statusMapToSupabase['Concluído'])
+      .eq('status_change_to', statusMapToSupabase['Concluído']) // Busca a nota da finalização
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -70,19 +73,43 @@ const ServiceOrderDetailPage: React.FC = () => {
     }
   };
 
+  const handleSaveNotes = async () => {
+    if (!technicianNotes.trim()) {
+      showError('Por favor, adicione uma observação antes de salvar.');
+      return;
+    }
+    if (!order || !currentStatus) return;
+
+    setIsSavingNotes(true);
+    try {
+      await addServiceOrderHistoryNote(order.id, technicianNotes, currentStatus);
+      setTechnicianNotes(''); // Limpar após salvar
+    } catch (error) {
+      console.error('Error saving technician notes:', error);
+      showError('Erro ao salvar observação.');
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
+
   const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
     if (order && newStatus !== currentStatus) {
       // Restrição: Apenas admin pode finalizar
-      if (newStatus === 'Concluído' && userRole !== 'admin') {
-        showError('Apenas administradores podem finalizar uma ordem de serviço.');
-        return;
-      }
-      if (newStatus === 'Concluído' && !technicianNotes.trim()) {
-        showError('Por favor, adicione as observações do técnico para finalizar a OS.');
-        return;
+      if (newStatus === 'Concluído') {
+        if (userRole !== 'admin') {
+          showError('Apenas administradores podem finalizar uma ordem de serviço.');
+          return;
+        }
+        if (!technicianNotes.trim()) {
+          showError('Por favor, adicione as observações do técnico para finalizar a OS.');
+          return;
+        }
       }
       await updateServiceOrderStatus(order.id, newStatus, newStatus === 'Concluído' ? technicianNotes : undefined);
       setCurrentStatus(newStatus);
+      if (newStatus === 'Concluído') {
+        setTechnicianNotes(''); // Limpar notas após finalizar
+      }
     }
   };
 
@@ -194,7 +221,7 @@ const ServiceOrderDetailPage: React.FC = () => {
                   <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                   <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem>
                   <SelectItem value="Chegou">Chegou</SelectItem>
-                  <SelectItem value="Concluído" disabled={userRole !== 'admin'}>Concluído</SelectItem> {/* Desabilitado para não-admins */}
+                  <SelectItem value="Concluído" disabled={userRole !== 'admin'}>Concluído</SelectItem>
                   <SelectItem value="Cancelado">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
@@ -206,24 +233,36 @@ const ServiceOrderDetailPage: React.FC = () => {
             </div>
           )}
 
-          {/* Campo de observações do técnico - visível e editável apenas para admin/technician ao finalizar */}
+          {/* Campo de observações do técnico e botão de salvar */}
           {isAdminOrTechnician && (
             <div className="space-y-2">
-              <Label htmlFor="technicianNotes">Observações do Técnico (ao finalizar)</Label>
+              <Label htmlFor="technicianNotes">Observações do Técnico</Label>
               <Textarea
                 id="technicianNotes"
-                placeholder="Descreva as observações finais ou o que foi feito para concluir o serviço."
+                placeholder="Adicione observações sobre o serviço..."
                 value={technicianNotes}
                 onChange={(e) => setTechnicianNotes(e.target.value)}
                 rows={4}
                 disabled={isCompleted && userRole !== 'admin'}
                 className={isCompleted && userRole !== 'admin' ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
               />
+              <Button
+                onClick={handleSaveNotes}
+                disabled={isSavingNotes || !technicianNotes.trim() || (isCompleted && userRole !== 'admin')}
+                className="w-full"
+              >
+                {isSavingNotes ? 'Salvando...' : 'Salvar Observação'}
+              </Button>
+              {isCompleted && userRole !== 'admin' && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Apenas administradores podem editar observações de OSs concluídas.
+                </p>
+              )}
             </div>
           )}
 
           {/* Seção para atribuição de técnico - visível apenas para administradores */}
-          {userRole === 'admin' && ( // Alterado para userRole === 'admin'
+          {userRole === 'admin' && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Técnico Atribuído</p>
               <p className="text-lg font-semibold text-red-600 dark:text-red-400">

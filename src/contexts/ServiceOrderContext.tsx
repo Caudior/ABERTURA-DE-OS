@@ -43,6 +43,7 @@ interface ServiceOrderContextType {
   addServiceOrder: (order: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo' | 'orderNumber'>) => Promise<void>;
   updateServiceOrderStatus: (id: string, newStatus: ServiceOrder['status'], notes?: string) => Promise<void>;
   assignTechnician: (id: string, technicianName: string) => Promise<void>;
+  addServiceOrderHistoryNote: (orderId: string, notes: string, currentStatus: ServiceOrder['status']) => Promise<void>; // Nova função
   loadingServiceOrders: boolean;
 }
 
@@ -288,36 +289,20 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    if (newStatus === 'Concluído' && notes) {
-      const { error: historyError } = await supabase
-        .from('service_order_history')
-        .insert({
-          service_order_id: id,
-          status_change_from: previousSupabaseStatus,
-          status_change_to: supabaseStatus,
-          changed_by: currentUserId,
-          notes: notes,
-        });
+    // Always insert history when status changes
+    const { error: historyError } = await supabase
+      .from('service_order_history')
+      .insert({
+        service_order_id: id,
+        status_change_from: previousSupabaseStatus,
+        status_change_to: supabaseStatus,
+        changed_by: currentUserId,
+        notes: notes || `Status alterado de '${previousUiStatus}' para '${newStatus}'.`, // Use provided notes or default
+      });
 
-      if (historyError) {
-        console.error('Supabase Error inserting service order history:', historyError);
-        showError('Erro ao registrar histórico da ordem de serviço.');
-      }
-    } else if (newStatus !== 'Concluído' && newStatus !== previousUiStatus) {
-      const { error: historyError } = await supabase
-        .from('service_order_history')
-        .insert({
-          service_order_id: id,
-          status_change_from: previousSupabaseStatus,
-          status_change_to: supabaseStatus,
-          changed_by: currentUserId,
-          notes: `Status alterado de '${previousUiStatus}' para '${newStatus}'.`,
-        });
-
-      if (historyError) {
-        console.error('Supabase Error inserting service order history for status change:', historyError);
-        showError('Erro ao registrar histórico da ordem de serviço.');
-      }
+    if (historyError) {
+      console.error('Supabase Error inserting service order history:', historyError);
+      showError('Erro ao registrar histórico da ordem de serviço.');
     }
 
     setServiceOrders((prevOrders) =>
@@ -367,8 +352,34 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
+  const addServiceOrderHistoryNote = async (orderId: string, notes: string, currentStatus: ServiceOrder['status']) => {
+    if (!session?.user?.id) {
+      showError('Usuário não autenticado.');
+      return;
+    }
+    const currentUserId = session.user.id;
+    const supabaseStatus = statusMapToSupabase[currentStatus];
+
+    const { error } = await supabase
+      .from('service_order_history')
+      .insert({
+        service_order_id: orderId,
+        status_change_from: supabaseStatus, // Registra o status atual como 'de' e 'para'
+        status_change_to: supabaseStatus,
+        changed_by: currentUserId,
+        notes: notes,
+      });
+
+    if (error) {
+      console.error('Supabase Error inserting service order history note:', error);
+      showError('Erro ao salvar observação.');
+    } else {
+      showSuccess('Observação salva com sucesso!');
+    }
+  };
+
   return (
-    <ServiceOrderContext.Provider value={{ serviceOrders, addServiceOrder, updateServiceOrderStatus, assignTechnician, loadingServiceOrders }}>
+    <ServiceOrderContext.Provider value={{ serviceOrders, addServiceOrder, updateServiceOrderStatus, assignTechnician, addServiceOrderHistoryNote, loadingServiceOrders }}>
       {children}
     </ServiceOrderContext.Provider>
   );
