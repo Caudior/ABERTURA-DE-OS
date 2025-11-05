@@ -74,6 +74,7 @@ const ServiceOrderDetailPage: React.FC = () => {
   };
 
   const handleSaveNotes = async () => {
+    console.log('Attempting to save notes. User Role:', userRole); // Log do userRole
     if (!technicianNotes.trim()) {
       showError('Por favor, adicione uma observação antes de salvar.');
       return;
