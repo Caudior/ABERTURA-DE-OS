@@ -371,7 +371,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       });
 
     if (error) {
-      console.error('Supabase Error inserting service order history note:', error);
+      console.error('Supabase Error inserting service order history note:', error); // Log detalhado
       showError('Erro ao salvar observação.');
     } else {
       showSuccess('Observação salva com sucesso!');
