@@ -38,14 +38,15 @@ const NewServiceOrderPage: React.FC = () => {
       return;
     }
 
+    console.log('NewServiceOrderPage: Calling addServiceOrder with:', { clientName, description });
+
     try {
-      addServiceOrder({ clientName, description });
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simular atraso de rede
+      await addServiceOrder({ clientName, description });
       showSuccess('Ordem de serviço criada com sucesso!');
       navigate('/service-orders');
     } catch (error) {
       showError('Erro ao criar ordem de serviço.');
-      console.error('Error creating service order:', error);
+      console.error('NewServiceOrderPage: Error creating service order:', error);
     } finally {
       setLoading(false);
     }

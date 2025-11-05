@@ -150,14 +150,18 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const addServiceOrder = async (newOrderData: Omit<ServiceOrder, 'id' | 'issueDate' | 'status' | 'client_id' | 'created_by' | 'assigned_technician_id' | 'assignedTo' | 'orderNumber'>) => {
     if (!session?.user?.id) {
-      showError('Usuário não autenticado.');
+      showError('Usuário não autenticado. Por favor, faça login novamente.');
+      console.error('addServiceOrder: User not authenticated.');
       return;
     }
 
     const currentUserId = session.user.id;
     let clientId: string | null = null;
 
+    console.log('addServiceOrder: Starting process for client:', newOrderData.clientName, 'by user:', currentUserId);
+
     // 1. Encontrar ou criar o cliente
+    console.log('addServiceOrder: Checking for existing client...');
     const { data: existingClient, error: clientError } = await supabase
       .from('clients')
       .select('id')
@@ -166,14 +170,16 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .single();
 
     if (clientError && clientError.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('Error checking client:', clientError);
-      showError('Erro ao verificar cliente.');
+      console.error('addServiceOrder: Error checking client:', clientError);
+      showError(`Erro ao verificar cliente: ${clientError.message}`);
       return;
     }
 
     if (existingClient) {
       clientId = existingClient.id;
+      console.log('addServiceOrder: Existing client found with ID:', clientId);
     } else {
+      console.log('addServiceOrder: Client not found, creating new client...');
       const { data: newClient, error: insertClientError } = await supabase
         .from('clients')
         .insert({ name: newOrderData.clientName, created_by: currentUserId })
@@ -181,19 +187,22 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         .single();
 
       if (insertClientError) {
-        console.error('Error creating client:', insertClientError);
-        showError('Erro ao criar novo cliente.');
+        console.error('addServiceOrder: Error creating client:', insertClientError);
+        showError(`Erro ao criar novo cliente: ${insertClientError.message}`);
         return;
       }
       clientId = newClient.id;
+      console.log('addServiceOrder: New client created with ID:', clientId);
     }
 
     if (!clientId) {
+      console.error('addServiceOrder: Client ID could not be determined.');
       showError('Não foi possível determinar o ID do cliente.');
       return;
     }
 
     // 2. Inserir a ordem de serviço
+    console.log('addServiceOrder: Inserting new service order...');
     const { data: insertedOrder, error: insertOrderError } = await supabase
       .from('service_orders')
       .insert({
@@ -215,20 +224,28 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .single();
 
     if (insertOrderError) {
-      console.error('Error adding service order:', insertOrderError);
-      showError('Erro ao criar ordem de serviço.');
+      console.error('addServiceOrder: Error adding service order:', insertOrderError);
+      showError(`Erro ao criar ordem de serviço: ${insertOrderError.message}`);
       return;
     }
 
+    if (!insertedOrder) {
+      console.error('addServiceOrder: Inserted order data is null or undefined.');
+      showError('Erro inesperado: A ordem de serviço não foi retornada após a criação.');
+      return;
+    }
+
+    console.log('addServiceOrder: Service order successfully inserted:', insertedOrder);
+
     // Após inserir, buscar os nomes para o novo item usando os mapas do estado
-    const clientName = clientsMap.get(insertedOrder.client_id) || newOrderData.clientName;
+    const clientNameForDisplay = newOrderData.clientName; // Usar o nome fornecido no formulário
     const assignedTo = insertedOrder.assigned_technician_id ? profilesMap.get(insertedOrder.assigned_technician_id) : undefined;
 
     const newServiceOrder: ServiceOrder = {
       id: insertedOrder.id,
       orderNumber: insertedOrder.order_number,
       client_id: insertedOrder.client_id,
-      clientName: clientName,
+      clientName: clientNameForDisplay, // Usar o nome do formulário
       description: insertedOrder.description,
       status: statusMapFromSupabase[insertedOrder.status] || 'Pendente',
       issueDate: new Date(insertedOrder.created_at).toLocaleString('pt-BR', {
@@ -247,6 +264,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     setServiceOrders((prevOrders) => [...prevOrders, newServiceOrder]);
     showSuccess('Ordem de serviço criada com sucesso!');
+    console.log('addServiceOrder: Service order added to state and success toast shown.');
   };
 
   const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status'], notes?: string) => {
