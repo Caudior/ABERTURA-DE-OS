@@ -25,13 +25,15 @@ const Index = () => {
   };
 
   if (loading) {
-    console.log('Index.tsx: Displaying loading state.');
+    console.log('Index.tsx: Displaying loading state. Current loading:', loading);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <p className="text-gray-700 dark:text-gray-300">Carregando...</p>
       </div>
     );
   }
+
+  console.log('Index.tsx: Loading is false. Session:', session?.user?.id); // Novo log aqui
 
   if (!session) {
     console.log('Index.tsx: No session, returning null (should have navigated).');

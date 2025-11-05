@@ -79,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error getting initial session:", error);
       } finally {
+        console.log('AuthContext: Setting loading to false in getInitialSession finally block.');
         setLoading(false);
         console.log('AuthContext: getInitialSession finished, loading set to false.');
       }
@@ -97,13 +98,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUsername(null);
           setUserRole(null);
         }
+        // Garante que loading seja false após qualquer mudança de estado de autenticação, se ainda for true
+        if (loading) {
+            console.log('AuthContext: onAuthStateChange setting loading to false.');
+            setLoading(false);
+        }
       }
     );
 
     return () => {
       authListener.unsubscribe();
     };
-  }, []);
+  }, []); // Removido `loading` da lista de dependências
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -190,6 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchUserProfile,
     fetchUserRole,
   };
+
+  console.log('AuthContext: Provider value being passed. Loading:', loading, 'Session user ID:', session?.user?.id);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
