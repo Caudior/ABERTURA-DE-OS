@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Inicia como true para indicar que a autenticação está sendo verificada
 
   console.log('AuthContext: AuthProvider rendering. Current loading:', loading, 'Session user ID:', session?.user?.id);
 
@@ -79,9 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error getting initial session:", error);
       } finally {
-        console.log('AuthContext: Setting loading to false in getInitialSession finally block.');
-        setLoading(false);
-        console.log('AuthContext: getInitialSession finished, loading set to false.');
+        console.log('AuthContext: getInitialSession finished. Setting loading to false.');
+        setLoading(false); // Garante que o loading seja false após a verificação inicial
       }
     };
     getInitialSession();
@@ -98,18 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUsername(null);
           setUserRole(null);
         }
-        // Garante que loading seja false após qualquer mudança de estado de autenticação, se ainda for true
-        if (loading) {
-            console.log('AuthContext: onAuthStateChange setting loading to false.');
-            setLoading(false);
-        }
+        // Não alteramos o estado 'loading' aqui, pois 'getInitialSession' já o gerencia para a carga inicial
+        // e as funções de login/logout gerenciam para suas operações específicas.
       }
     );
 
     return () => {
       authListener.unsubscribe();
     };
-  }, []); // Removido `loading` da lista de dependências
+  }, []); // Dependências vazias para rodar apenas na montagem
 
   const login = async (email: string, password: string) => {
     setLoading(true);
