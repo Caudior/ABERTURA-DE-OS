@@ -49,8 +49,8 @@ const ServiceOrderDetailPage: React.FC = () => {
         status_change_from,
         status_change_to,
         notes,
-        changed_by
-        // profiles(full_name) // Removido temporariamente para depuração
+        changed_by,
+        profiles(full_name)
       `)
       .eq('service_order_id', orderId)
       .order('created_at', { ascending: true }); // Ordenar por data para exibir cronologicamente
@@ -60,9 +60,7 @@ const ServiceOrderDetailPage: React.FC = () => {
       showError('Erro ao carregar histórico da ordem de serviço.');
       setHistoryEntries([]);
     } else {
-      console.log('ServiceOrderDetailPage: Successfully fetched service order history (without profiles join):', data);
-      // Se a junção com perfis for o problema, precisaremos buscar os nomes separadamente
-      // ou reavaliar a política RLS para a tabela 'profiles' em conjunto com a junção.
+      console.log('ServiceOrderDetailPage: Successfully fetched service order history:', data);
       setHistoryEntries(data);
     }
   };
