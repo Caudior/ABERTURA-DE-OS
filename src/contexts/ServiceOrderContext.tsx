@@ -49,7 +49,6 @@ interface ServiceOrderContextType {
 const ServiceOrderContext = createContext<ServiceOrderContextType | undefined>(undefined);
 
 export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  console.log('ServiceOrderProvider is rendering'); // Adicionado para depuração
   const { session, username, userRole, loading: authLoading } = useAuth();
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>([]);
   const [loadingServiceOrders, setLoadingServiceOrders] = useState(true);
@@ -64,7 +63,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     setLoadingServiceOrders(true);
-    // Re-adicionando a coluna 'status' com casting para texto e garantindo 'order_number'
     const { data: serviceOrdersData, error } = await supabase
       .from('service_orders')
       .select(`
@@ -120,7 +118,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         client_id: so.client_id,
         clientName: currentClientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
-        status: statusMapFromSupabase[so.status] || 'Pendente', // Usar o status real do DB
+        status: statusMapFromSupabase[so.status] || 'Pendente',
         issueDate: new Date(so.created_at).toLocaleString('pt-BR', {
           year: 'numeric',
           month: '2-digit',
@@ -158,10 +156,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentUserId = session.user.id;
     let clientId: string | null = null;
 
-    console.log('addServiceOrder: Starting process for client:', newOrderData.clientName, 'by user:', currentUserId);
-
     // 1. Encontrar ou criar o cliente
-    console.log('addServiceOrder: Checking for existing client...');
     const { data: existingClient, error: clientError } = await supabase
       .from('clients')
       .select('id')
@@ -169,7 +164,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .eq('created_by', currentUserId)
       .single();
 
-    if (clientError && clientError.code !== 'PGRST116') { // PGRST116 = No rows found
+    if (clientError && clientError.code !== 'PGRST116') {
       console.error('addServiceOrder: Error checking client:', clientError);
       showError(`Erro ao verificar cliente: ${clientError.message}`);
       return;
@@ -177,9 +172,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     if (existingClient) {
       clientId = existingClient.id;
-      console.log('addServiceOrder: Existing client found with ID:', clientId);
     } else {
-      console.log('addServiceOrder: Client not found, creating new client...');
       const { data: newClient, error: insertClientError } = await supabase
         .from('clients')
         .insert({ name: newOrderData.clientName, created_by: currentUserId })
@@ -192,7 +185,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         return;
       }
       clientId = newClient.id;
-      console.log('addServiceOrder: New client created with ID:', clientId);
     }
 
     if (!clientId) {
@@ -202,13 +194,12 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
 
     // 2. Inserir a ordem de serviço
-    console.log('addServiceOrder: Inserting new service order...');
     const { data: insertedOrder, error: insertOrderError } = await supabase
       .from('service_orders')
       .insert({
         client_id: clientId,
         description: newOrderData.description,
-        status: statusMapToSupabase['Pendente'], // Status inicial
+        status: statusMapToSupabase['Pendente'],
         created_by: currentUserId,
       })
       .select(`
@@ -235,17 +226,14 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    console.log('addServiceOrder: Service order successfully inserted:', insertedOrder);
-
-    // Após inserir, buscar os nomes para o novo item usando os mapas do estado
-    const clientNameForDisplay = newOrderData.clientName; // Usar o nome fornecido no formulário
+    const clientNameForDisplay = newOrderData.clientName;
     const assignedTo = insertedOrder.assigned_technician_id ? profilesMap.get(insertedOrder.assigned_technician_id) : undefined;
 
     const newServiceOrder: ServiceOrder = {
       id: insertedOrder.id,
       orderNumber: insertedOrder.order_number,
       client_id: insertedOrder.client_id,
-      clientName: clientNameForDisplay, // Usar o nome do formulário
+      clientName: clientNameForDisplay,
       description: insertedOrder.description,
       status: statusMapFromSupabase[insertedOrder.status] || 'Pendente',
       issueDate: new Date(insertedOrder.created_at).toLocaleString('pt-BR', {
@@ -264,7 +252,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     setServiceOrders((prevOrders) => [...prevOrders, newServiceOrder]);
     showSuccess('Ordem de serviço criada com sucesso!');
-    console.log('addServiceOrder: Service order added to state and success toast shown.');
   };
 
   const updateServiceOrderStatus = async (id: string, newStatus: ServiceOrder['status'], notes?: string) => {
@@ -275,7 +262,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentUserId = session.user.id;
     const supabaseStatus = statusMapToSupabase[newStatus];
 
-    // Primeiro, obtenha o status atual para registrar no histórico
     const { data: currentOrderData, error: fetchError } = await supabase
       .from('service_orders')
       .select('status')
@@ -291,7 +277,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     const previousSupabaseStatus = currentOrderData.status;
     const previousUiStatus = statusMapFromSupabase[previousSupabaseStatus] || 'Pendente';
 
-    // Atualiza o status na tabela principal de ordens de serviço
     const { error: updateError } = await supabase
       .from('service_orders')
       .update({ status: supabaseStatus })
@@ -303,7 +288,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    // Se o status for 'Concluído' e houver notas, insere no histórico
     if (newStatus === 'Concluído' && notes) {
       const { error: historyError } = await supabase
         .from('service_order_history')
@@ -320,7 +304,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         showError('Erro ao registrar histórico da ordem de serviço.');
       }
     } else if (newStatus !== 'Concluído' && newStatus !== previousUiStatus) {
-      // Para outras mudanças de status, registre no histórico sem notas específicas
       const { error: historyError } = await supabase
         .from('service_order_history')
         .insert({
@@ -393,7 +376,6 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
 
 export const useServiceOrders = () => {
   const context = useContext(ServiceOrderContext);
-  console.log('useServiceOrders called, context:', context); // Adicionado para depuração
   if (context === undefined) {
     throw new Error('useServiceOrders must be used within a ServiceOrderProvider');
   }
