@@ -1,160 +1,174 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+"use client";
+
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import { showSuccess, showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 
 interface AuthContextType {
   session: Session | null;
-  username: string | null;
+  user: User | null;
   userRole: string | null;
+  username: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string, isTechnician: boolean) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (email: string, password: string, role: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
+  fetchUserProfile: (user: User) => Promise<void>;
+  fetchUserRole: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  console.log('AuthContext: AuthProvider component rendering...'); // Novo log
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // Inicia como true para carregar a sessão inicial
 
-  const fetchUserProfile = async (userId: string) => {
-    console.log('AuthContext: Fetching user profile for ID:', userId);
+  const fetchUserProfile = async (currentUser: User) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name, role')
+      .select('name')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      setUsername(null);
+    } else if (data) {
+      setUsername(data.name);
+    }
+  };
+
+  const fetchUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
       .eq('id', userId)
       .single();
 
     if (error) {
-      console.error('AuthContext: Error fetching user profile:', error);
-      // Se o perfil não for encontrado, pode ser um novo usuário, então definimos um papel padrão.
-      setUserRole(null); // Manter null para indicar que não foi encontrado no DB
-      return null;
+      console.error("Error fetching user role:", error);
+      setUserRole(null);
+    } else if (data) {
+      setUserRole(data.role);
     }
-    console.log('AuthContext: User profile fetched:', data);
-    return data;
   };
 
   useEffect(() => {
-    console.log('AuthContext: useEffect running...');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('AuthContext: Auth state changed event:', _event, 'Session:', session);
-      setSession(session);
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          setUsername(profile.full_name || session.user.email?.split('@')[0] || null);
-          setUserRole(profile.role);
-        } else {
-          // Se o perfil não for encontrado, o usuário pode ser novo ou a criação do perfil falhou.
-          // Definir nome de usuário e função padrão com base no e-mail.
-          setUsername(session.user.email?.split('@')[0] || null);
-          setUserRole('client'); // Função padrão se o perfil não for encontrado
-          console.warn('AuthContext: User profile not found, defaulting role to "client".');
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user || null);
+        if (session) {
+          await fetchUserProfile(session.user);
+          await fetchUserRole(session.user.id);
         }
-      } else {
-        setUsername(null);
-        setUserRole(null);
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+      } finally {
+        setLoading(false); // Garante que o loading seja false após a verificação inicial
       }
-      setLoading(false);
-      console.log('AuthContext: setLoading(false) after onAuthStateChange');
-    });
+    };
+    getInitialSession();
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('AuthContext: Initial getSession result:', session);
-      setSession(session);
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        if (profile) {
-          setUsername(profile.full_name || session.user.email?.split('@')[0] || null);
-          setUserRole(profile.role);
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, currentSession) => {
+        // Este listener deve apenas reagir às mudanças de estado de autenticação,
+        // não gerenciar o indicador de carregamento global.
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        if (currentSession) {
+          await fetchUserProfile(currentSession.user);
+          await fetchUserRole(currentSession.user.id);
         } else {
-          setUsername(session.user.email?.split('@')[0] || null);
-          setUserRole('client'); // Função padrão se o perfil não for encontrado
-          console.warn('AuthContext: User profile not found during initial getSession, defaulting role to "client".');
+          // Limpar estados específicos do usuário ao fazer logout
+          setUsername(null);
+          setUserRole(null);
         }
-      } else {
-        setUsername(null);
-        setUserRole(null);
       }
-      setLoading(false);
-      console.log('AuthContext: setLoading(false) after getSession');
-    }).catch(error => {
-      console.error('AuthContext: Error fetching initial session:', error);
-      setLoading(false);
-      console.log('AuthContext: setLoading(false) after getSession error');
-    });
+    );
 
     return () => {
-      console.log('AuthContext: Unsubscribing from auth state changes.');
-      subscription.unsubscribe();
+      authListener.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    console.log('AuthContext: Attempting login for:', email);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      console.error('AuthContext: Login error:', error);
-      throw error;
+    setLoading(true); // Inicia o carregamento
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        showError(error.message);
+        return false;
+      }
+      showSuccess("Login realizado com sucesso!");
+      return true;
+    } catch (error: any) {
+      showError(error.message);
+      return false;
+    } finally {
+      setLoading(false); // Finaliza o carregamento
     }
-    showSuccess('Login realizado com sucesso!');
-    console.log('AuthContext: Login successful.');
   };
 
-  const signup = async (fullName: string, email: string, password: string, isTechnician: boolean) => {
-    setLoading(true);
-    console.log('AuthContext: Attempting signup for:', email, 'Role:', isTechnician ? 'technician' : 'client');
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: isTechnician ? 'technician' : 'client',
-        },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      console.error('AuthContext: Signup error:', error);
-      throw error;
-    }
-    if (data.user) {
-      showSuccess('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
-      console.log('AuthContext: Signup successful, user:', data.user);
+  const signup = async (email: string, password: string, role: string, name: string) => {
+    setLoading(true); // Inicia o carregamento
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        showError(error.message);
+        return false;
+      }
+      if (data.user) {
+        await supabase.from('profiles').insert({ id: data.user.id, email, role, name });
+        showSuccess("Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.");
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      showError(error.message);
+      return false;
+    } finally {
+      setLoading(false); // Finaliza o carregamento
     }
   };
 
   const logout = async () => {
-    setLoading(true);
-    console.log('AuthContext: Attempting logout.');
-    const { error } = await supabase.auth.signOut();
-    setLoading(false);
-    if (error) {
-      showError('Erro ao fazer logout.');
-      console.error('AuthContext: Logout error:', error);
-      throw error;
+    setLoading(true); // Inicia o carregamento para a operação de logout
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        showError(error.message);
+      } else {
+        showSuccess("Você foi desconectado com sucesso!");
+        // O listener onAuthStateChange irá atualizar session/user para null.
+        // O setLoading(false) no finally garante que o indicador seja desativado.
+      }
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setLoading(false); // Garante que o loading seja sempre false após a tentativa de logout
     }
-    showSuccess('Logout realizado com sucesso!');
-    setSession(null);
-    setUsername(null);
-    setUserRole(null);
-    console.log('AuthContext: Logout successful.');
   };
 
-  return (
-    <AuthContext.Provider value={{ session, username, userRole, loading, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    session,
+    user,
+    userRole,
+    username,
+    loading,
+    login,
+    signup,
+    logout,
+    fetchUserProfile,
+    fetchUserRole,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
