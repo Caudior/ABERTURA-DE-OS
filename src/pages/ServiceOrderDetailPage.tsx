@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useServiceOrders, ServiceOrder, statusMapToSupabase } from '@/contexts/ServiceOrderContext';
+import { useServiceOrders, ServiceOrder, statusMapToSupabase, statusMapFromSupabase } from '@/contexts/ServiceOrderContext';
 import { useTechnicians } from '@/contexts/TechnicianContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,13 +30,38 @@ const ServiceOrderDetailPage: React.FC = () => {
   const [currentStatus, setCurrentStatus] = useState<ServiceOrder['status'] | undefined>(undefined);
   const [selectedTechnician, setSelectedTechnician] = useState<string | undefined>(undefined);
   const [technicianNotes, setTechnicianNotes] = useState('');
-  const [isSavingNotes, setIsSavingNotes] = useState(false); // Novo estado para o botão de salvar observações
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<any[]>([]); // Novo estado para o histórico
 
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/login");
     }
   }, [session, authLoading, navigate]);
+
+  const fetchServiceOrderHistory = async (orderId: string) => {
+    const { data, error } = await supabase
+      .from('service_order_history')
+      .select(`
+        id,
+        created_at,
+        status_change_from,
+        status_change_to,
+        notes,
+        changed_by,
+        profiles(full_name)
+      `)
+      .eq('service_order_id', orderId)
+      .order('created_at', { ascending: true }); // Ordenar por data para exibir cronologicamente
+
+    if (error) {
+      console.error('Error fetching service order history:', error);
+      showError('Erro ao carregar histórico da ordem de serviço.');
+      setHistoryEntries([]);
+    } else {
+      setHistoryEntries(data);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -45,36 +70,13 @@ const ServiceOrderDetailPage: React.FC = () => {
       if (foundOrder) {
         setCurrentStatus(foundOrder.status);
         setSelectedTechnician(foundOrder.assignedTo);
-
-        // Carregar a última observação se a OS estiver concluída, senão limpar o campo
-        if (foundOrder.status === 'Concluído') {
-          fetchTechnicianNotes(foundOrder.id);
-        } else {
-          setTechnicianNotes(''); // Limpar para novas observações
-        }
+        fetchServiceOrderHistory(foundOrder.id); // Chamar a nova função para buscar o histórico
+        setTechnicianNotes(''); // Limpar o campo de observações para novas entradas
       }
     }
   }, [id, serviceOrders]);
 
-  const fetchTechnicianNotes = async (orderId: string) => {
-    const { data, error } = await supabase
-      .from('service_order_history')
-      .select('notes')
-      .eq('service_order_id', orderId)
-      .eq('status_change_to', statusMapToSupabase['Concluído']) // Busca a nota da finalização
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
-      console.error('Error fetching technician notes:', error);
-    } else if (data) {
-      setTechnicianNotes(data.notes || '');
-    }
-  };
-
   const handleSaveNotes = async () => {
-    console.log('Attempting to save notes. User Role:', userRole); // Log do userRole
     if (!technicianNotes.trim()) {
       showError('Por favor, adicione uma observação antes de salvar.');
       return;
@@ -84,7 +86,8 @@ const ServiceOrderDetailPage: React.FC = () => {
     setIsSavingNotes(true);
     try {
       await addServiceOrderHistoryNote(order.id, technicianNotes, currentStatus);
-      setTechnicianNotes(''); // Limpar após salvar
+      setTechnicianNotes(''); // Limpar o input após salvar
+      fetchServiceOrderHistory(order.id); // Re-buscar o histórico para mostrar a nova observação
     } catch (error) {
       console.error('Error saving technician notes:', error);
       showError('Erro ao salvar observação.');
@@ -95,7 +98,6 @@ const ServiceOrderDetailPage: React.FC = () => {
 
   const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
     if (order && newStatus !== currentStatus) {
-      // Restrição: Apenas admin pode finalizar
       if (newStatus === 'Concluído') {
         if (userRole !== 'admin') {
           showError('Apenas administradores podem finalizar uma ordem de serviço.');
@@ -111,6 +113,7 @@ const ServiceOrderDetailPage: React.FC = () => {
       if (newStatus === 'Concluído') {
         setTechnicianNotes(''); // Limpar notas após finalizar
       }
+      fetchServiceOrderHistory(order.id); // Re-buscar o histórico após a mudança de status
     }
   };
 
@@ -237,14 +240,14 @@ const ServiceOrderDetailPage: React.FC = () => {
           {/* Campo de observações do técnico e botão de salvar */}
           {isAdminOrTechnician && (
             <div className="space-y-2">
-              <Label htmlFor="technicianNotes">Observações do Técnico</Label>
+              <Label htmlFor="technicianNotes">Adicionar Observação</Label>
               <Textarea
                 id="technicianNotes"
-                placeholder="Adicione observações sobre o serviço..."
+                placeholder="Adicione uma nova observação sobre o serviço..."
                 value={technicianNotes}
                 onChange={(e) => setTechnicianNotes(e.target.value)}
                 rows={4}
-                disabled={isCompleted && userRole !== 'admin'}
+                disabled={isSavingNotes || (isCompleted && userRole !== 'admin')}
                 className={isCompleted && userRole !== 'admin' ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}
               />
               <Button
@@ -256,7 +259,7 @@ const ServiceOrderDetailPage: React.FC = () => {
               </Button>
               {isCompleted && userRole !== 'admin' && (
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Apenas administradores podem editar observações de OSs concluídas.
+                  Apenas administradores podem adicionar observações a OSs concluídas.
                 </p>
               )}
             </div>
@@ -285,6 +288,35 @@ const ServiceOrderDetailPage: React.FC = () => {
                 <Button onClick={handleAssignTechnician} disabled={!selectedTechnician || selectedTechnician === order.assignedTo}>
                   Atribuir
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Seção de Histórico da Ordem de Serviço */}
+          {historyEntries.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Histórico da Ordem</h3>
+              <div className="border rounded-md p-4 max-h-60 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+                {historyEntries.map((entry, index) => (
+                  <div key={entry.id} className={`mb-3 pb-3 ${index < historyEntries.length - 1 ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(entry.created_at).toLocaleString('pt-BR', {
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+                      })} por <span className="font-medium">{entry.profiles?.full_name || 'Desconhecido'}</span>
+                    </p>
+                    {entry.status_change_from && entry.status_change_to && entry.status_change_from !== entry.status_change_to && (
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Status alterado de <span className="font-medium">{statusMapFromSupabase[entry.status_change_from]}</span> para <span className="font-medium">{statusMapFromSupabase[entry.status_change_to]}</span>.
+                      </p>
+                    )}
+                    {entry.notes && (
+                      <p className="text-sm text-gray-800 dark:text-gray-200">
+                        <span className="font-medium">Obs:</span> {entry.notes}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
