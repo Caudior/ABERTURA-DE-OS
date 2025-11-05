@@ -72,14 +72,17 @@ const ServiceOrderDetailPage: React.FC = () => {
 
   const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
     if (order && newStatus !== currentStatus) {
+      // Restrição: Apenas admin pode finalizar
+      if (newStatus === 'Concluído' && userRole !== 'admin') {
+        showError('Apenas administradores podem finalizar uma ordem de serviço.');
+        return;
+      }
       if (newStatus === 'Concluído' && !technicianNotes.trim()) {
         showError('Por favor, adicione as observações do técnico para finalizar a OS.');
         return;
       }
       await updateServiceOrderStatus(order.id, newStatus, newStatus === 'Concluído' ? technicianNotes : undefined);
       setCurrentStatus(newStatus);
-      // Não limpar as notas aqui, pois elas podem ter sido salvas e devem ser exibidas
-      // O useEffect de carregamento de notas cuidará de preencher se a página for recarregada
     }
   };
 
@@ -191,10 +194,15 @@ const ServiceOrderDetailPage: React.FC = () => {
                   <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                   <SelectItem value="Em Deslocamento">Em Deslocamento</SelectItem>
                   <SelectItem value="Chegou">Chegou</SelectItem>
-                  <SelectItem value="Concluído">Concluído</SelectItem>
+                  <SelectItem value="Concluído" disabled={userRole !== 'admin'}>Concluído</SelectItem> {/* Desabilitado para não-admins */}
                   <SelectItem value="Cancelado">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
+              {userRole !== 'admin' && (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                  Apenas administradores podem finalizar uma ordem de serviço.
+                </p>
+              )}
             </div>
           )}
 
