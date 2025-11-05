@@ -9,8 +9,12 @@ const Index = () => {
   const { session, loading, username, logout } = useAuth();
   const navigate = useNavigate();
 
+  console.log('Index.tsx: Rendering Index. Loading:', loading, 'Session:', session?.user?.id);
+
   useEffect(() => {
+    console.log('Index.tsx: useEffect triggered. Loading:', loading, 'Session:', session?.user?.id);
     if (!loading && !session) {
+      console.log('Index.tsx: Navigating to /login');
       navigate("/login");
     }
   }, [session, loading, navigate]);
@@ -21,6 +25,7 @@ const Index = () => {
   };
 
   if (loading) {
+    console.log('Index.tsx: Displaying loading state.');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <p className="text-gray-700 dark:text-gray-300">Carregando...</p>
@@ -29,6 +34,7 @@ const Index = () => {
   }
 
   if (!session) {
+    console.log('Index.tsx: No session, returning null (should have navigated).');
     return null;
   }
 

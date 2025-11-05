@@ -27,7 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('AuthContext: AuthProvider rendering. Current loading:', loading, 'Session user ID:', session?.user?.id);
+
   const fetchUserProfile = async (currentUser: User) => {
+    console.log('AuthContext: fetchUserProfile for user ID:', currentUser.id);
     const { data, error } = await supabase
       .from('profiles')
       .select('full_name')
@@ -39,10 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUsername(null);
     } else if (data) {
       setUsername(data.full_name);
+      console.log('AuthContext: User profile fetched, username:', data.full_name);
     }
   };
 
   const fetchUserRole = async (userId: string) => {
+    console.log('AuthContext: fetchUserRole for userId:', userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
@@ -54,13 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserRole(null);
     } else if (data) {
       setUserRole(data.role);
+      console.log('AuthContext: User role fetched, role:', data.role);
     }
   };
 
   useEffect(() => {
+    console.log('AuthContext: useEffect for initial session and listener setup.');
     const getInitialSession = async () => {
+      console.log('AuthContext: getInitialSession started.');
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('AuthContext: getInitialSession fetched session. User ID:', initialSession?.user?.id);
         setSession(initialSession);
         setUser(initialSession?.user || null);
         if (initialSession) {
@@ -71,12 +80,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error getting initial session:", error);
       } finally {
         setLoading(false);
+        console.log('AuthContext: getInitialSession finished, loading set to false.');
       }
     };
     getInitialSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
+        console.log('AuthContext: onAuthStateChange triggered, event:', _event, 'session user ID:', currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user || null);
         if (currentSession) {
@@ -96,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     setLoading(true);
+    console.log('AuthContext: login started, loading set to true.');
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
@@ -103,17 +115,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       showSuccess("Login realizado com sucesso!");
+      console.log('AuthContext: Login successful for user ID:', data.user?.id);
       return true;
     } catch (error: any) {
       showError(error.message);
       return false;
     } finally {
       setLoading(false);
+      console.log('AuthContext: login finished, loading set to false.');
     }
   };
 
   const signup = async (fullName: string, email: string, password: string, isTechnician: boolean) => {
     setLoading(true);
+    console.log('AuthContext: signup started, loading set to true.');
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -131,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       if (data.user) {
         showSuccess("Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.");
+        console.log('AuthContext: Signup successful for user ID:', data.user?.id);
         return true;
       }
       return false;
@@ -139,22 +155,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     } finally {
       setLoading(false);
+      console.log('AuthContext: signup finished, loading set to false.');
     }
   };
 
   const logout = async () => {
     setLoading(true);
+    console.log('AuthContext: logout started, loading set to true.');
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         showError(error.message);
       } else {
         showSuccess("Você foi desconectado com sucesso!");
+        console.log('AuthContext: Logout successful.');
       }
     } catch (error: any) {
       showError(error.message);
     } finally {
       setLoading(false);
+      console.log('AuthContext: logout finished, loading set to false.');
     }
   };
 
