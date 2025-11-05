@@ -40,6 +40,7 @@ const ServiceOrderDetailPage: React.FC = () => {
   }, [session, authLoading, navigate]);
 
   const fetchServiceOrderHistory = async (orderId: string) => {
+    console.log('ServiceOrderDetailPage: Fetching history for orderId:', orderId);
     const { data, error } = await supabase
       .from('service_order_history')
       .select(`
@@ -48,17 +49,20 @@ const ServiceOrderDetailPage: React.FC = () => {
         status_change_from,
         status_change_to,
         notes,
-        changed_by,
-        profiles(full_name)
+        changed_by
+        // profiles(full_name) // Removido temporariamente para depuração
       `)
       .eq('service_order_id', orderId)
       .order('created_at', { ascending: true }); // Ordenar por data para exibir cronologicamente
 
     if (error) {
-      console.error('Error fetching service order history:', error);
+      console.error('ServiceOrderDetailPage: Supabase Error fetching service order history:', error); // Log mais detalhado
       showError('Erro ao carregar histórico da ordem de serviço.');
       setHistoryEntries([]);
     } else {
+      console.log('ServiceOrderDetailPage: Successfully fetched service order history (without profiles join):', data);
+      // Se a junção com perfis for o problema, precisaremos buscar os nomes separadamente
+      // ou reavaliar a política RLS para a tabela 'profiles' em conjunto com a junção.
       setHistoryEntries(data);
     }
   };
@@ -89,7 +93,7 @@ const ServiceOrderDetailPage: React.FC = () => {
       setTechnicianNotes(''); // Limpar o input após salvar
       fetchServiceOrderHistory(order.id); // Re-buscar o histórico para mostrar a nova observação
     } catch (error) {
-      console.error('Error saving technician notes:', error);
+      console.error('ServiceOrderDetailPage: Error saving technician notes:', error);
       showError('Erro ao salvar observação.');
     } finally {
       setIsSavingNotes(false);
