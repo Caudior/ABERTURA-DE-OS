@@ -12,7 +12,7 @@ interface AuthContextType {
   username: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (fullName: string, email: string, password: string, isTechnician: boolean) => Promise<boolean>; // Assinatura atualizada
+  signup: (fullName: string, email: string, password: string, isTechnician: boolean) => Promise<boolean>; // Assinatura corrigida
   logout: () => Promise<void>;
   fetchUserProfile: (user: User) => Promise<void>;
   fetchUserRole: (userId: string) => Promise<void>;
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: fetchUserProfile for user ID:', currentUser.id);
     const { data, error } = await supabase
       .from('profiles')
-      .select('full_name') // Alterado para full_name
+      .select('full_name')
       .eq('id', currentUser.id)
       .single();
 
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("AuthContext: Error fetching user profile:", error);
       setUsername(null);
     } else if (data) {
-      setUsername(data.full_name); // Alterado para full_name
+      setUsername(data.full_name);
       console.log('AuthContext: User profile fetched, username:', data.full_name);
     }
   };
@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("AuthContext: Error getting initial session:", error);
       } finally {
-        setLoading(false); // Garante que o loading seja false após a verificação inicial
+        setLoading(false);
         console.log('AuthContext: getInitialSession finished, loading set to false.');
       }
     };
@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true); // Inicia o carregamento
+    setLoading(true);
     console.log('AuthContext: login started, loading set to true.');
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -124,13 +124,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('AuthContext: Login catch error:', error.message);
       return false;
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
       console.log('AuthContext: login finished, loading set to false.');
     }
   };
 
   const signup = async (fullName: string, email: string, password: string, isTechnician: boolean) => {
-    setLoading(true); // Inicia o carregamento
+    setLoading(true);
     console.log('AuthContext: signup started, loading set to true. FullName:', fullName, 'Email:', email, 'IsTechnician:', isTechnician);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -138,8 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: {
-            full_name: fullName, // Passando full_name para raw_user_meta_data
-            role: isTechnician ? 'technician' : 'client', // Passando role para raw_user_meta_data
+            full_name: fullName,
+            role: isTechnician ? 'technician' : 'client',
           },
         },
       });
@@ -149,8 +149,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
       if (data.user) {
-        // O gatilho 'handle_new_user' no Supabase deve criar o perfil automaticamente
-        // com base nos dados passados em 'options.data'.
         showSuccess("Cadastro realizado com sucesso! Verifique seu e-mail para confirmar.");
         console.log('AuthContext: Signup successful for user ID:', data.user?.id);
         return true;
@@ -161,13 +159,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('AuthContext: Signup catch error:', error.message);
       return false;
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
       console.log('AuthContext: signup finished, loading set to false.');
     }
   };
 
   const logout = async () => {
-    setLoading(true); // Inicia o carregamento para a operação de logout
+    setLoading(true);
     console.log('AuthContext: logout started, loading set to true.');
     try {
       const { error } = await supabase.auth.signOut();
@@ -181,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       showError(error.message);
     } finally {
-      setLoading(false); // Garante que o loading seja sempre false após a tentativa de logout
+      setLoading(false);
       console.log('AuthContext: logout finished, loading set to false.');
     }
   };
