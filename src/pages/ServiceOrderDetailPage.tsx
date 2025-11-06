@@ -152,16 +152,16 @@ const ServiceOrderDetailPage: React.FC = () => {
       <style>
         body { 
           margin: 0; 
-          padding: 15px; 
+          padding: 10px; /* Reduced padding */
           font-family: sans-serif; 
           color: #333; 
-          font-size: 12px; /* Base font size for print */
+          font-size: 11px; /* Base font size for print */
         }
         h1, h2, h3, p { margin: 0 0 5px 0; }
         div { page-break-inside: avoid; } /* Avoid breaking content across pages */
-        img { max-width: 150px; height: auto; display: block; margin: 0 auto 10px auto; } /* Style for logo */
+        img { max-width: 100px; height: auto; display: block; margin: 0 auto 10px auto; } /* Smaller logo for print */
         @page {
-          margin: 1cm; /* Smaller margins for print */
+          margin: 0.8cm; /* Even smaller margins for print */
         }
       </style>
     `;
