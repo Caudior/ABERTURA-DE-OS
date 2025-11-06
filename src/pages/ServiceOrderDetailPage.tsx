@@ -19,6 +19,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { showSuccess, showError } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
+import ServiceOrderPrint from '@/components/ServiceOrderPrint'; // Importar o novo componente
+import ReactDOM from 'react-dom/client'; // Importar ReactDOM para createRoot
 
 const ServiceOrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -125,6 +127,44 @@ const ServiceOrderDetailPage: React.FC = () => {
     } else if (order && !selectedTechnician) {
       showError('Por favor, selecione um técnico para atribuir.');
     }
+  };
+
+  const handlePrint = () => {
+    if (!order) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showError('Não foi possível abrir a janela de impressão. Verifique se os pop-ups estão bloqueados.');
+      return;
+    }
+
+    // Create a temporary div to render the React component
+    const printContainer = printWindow.document.createElement('div');
+    printWindow.document.body.appendChild(printContainer);
+
+    // Render the React component into the temporary div
+    const root = ReactDOM.createRoot(printContainer);
+    root.render(<ServiceOrderPrint order={order} historyEntries={historyEntries} />);
+
+    // Add basic print styles
+    printWindow.document.head.innerHTML = `
+      <title>Ordem de Serviço #${order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)}</title>
+      <style>
+        body { margin: 0; padding: 20px; font-family: sans-serif; color: #333; }
+        h1, h2, h3, p { margin: 0 0 10px 0; }
+        div { page-break-inside: avoid; } /* Avoid breaking content across pages */
+        @media print {
+          /* Optional: Hide elements not meant for print */
+        }
+      </style>
+    `;
+
+    // Wait for the content to render, then print
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+      root.unmount(); // Clean up React root
+    }, 500); // Small delay to ensure content is rendered
   };
 
   if (authLoading) {
@@ -322,6 +362,9 @@ const ServiceOrderDetailPage: React.FC = () => {
               </div>
             </div>
           )}
+          <Button onClick={handlePrint} className="w-full">
+            Imprimir OS
+          </Button>
         </CardContent>
       </Card>
     </div>
