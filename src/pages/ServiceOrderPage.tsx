@@ -71,11 +71,14 @@ const ServiceOrderPage: React.FC = () => {
     // Filtrar por período de datas
     let dateRangeMatch = true;
     if (dateRange?.from) {
-      const orderIssueDate = order.issueDate; // Já é um objeto Date
-      const start = startOfDay(dateRange.from);
-      const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from); // Se apenas 'from' for selecionado, filtra para aquele dia
+      // Normaliza a data da ordem para o início do seu dia local
+      const orderLocalDayStart = startOfDay(order.issueDate);
+      // Normaliza o início e fim do período de filtro para os limites do dia local
+      const filterRangeStart = startOfDay(dateRange.from);
+      const filterRangeEnd = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
 
-      dateRangeMatch = orderIssueDate >= start && orderIssueDate <= end;
+      // Compara os timestamps normalizados
+      dateRangeMatch = orderLocalDayStart.getTime() >= filterRangeStart.getTime() && orderLocalDayStart.getTime() <= filterRangeEnd.getTime();
     }
 
     return statusMatch && osNumberMatch && clientNameMatch && dateRangeMatch;
