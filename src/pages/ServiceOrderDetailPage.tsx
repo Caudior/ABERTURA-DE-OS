@@ -182,9 +182,8 @@ const ServiceOrderDetailPage: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
   if (!order) {
     return (

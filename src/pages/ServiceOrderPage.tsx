@@ -43,9 +43,8 @@ const ServiceOrderPage: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
   // Função para verificar se a OS está pendente e há mais de 48 horas
   const isOverdue = (order: ServiceOrder) => {

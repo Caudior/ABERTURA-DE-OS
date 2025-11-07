@@ -60,12 +60,8 @@ const NewServiceOrderPage: React.FC = () => {
     );
   }
 
-  if (!session) {
-    // Se não há sessão e não está carregando, o useEffect já deveria ter redirecionado.
-    // Retornar null aqui pode ser um problema se o redirecionamento falhar por algum motivo.
-    // É melhor garantir que o redirecionamento ocorra antes de renderizar qualquer coisa.
-    return null; 
-  }
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex justify-center">

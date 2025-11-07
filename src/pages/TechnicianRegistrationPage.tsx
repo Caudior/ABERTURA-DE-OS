@@ -66,9 +66,8 @@ const TechnicianRegistrationPage: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return null;
-  }
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 sm:p-6 lg:p-8 flex justify-center">

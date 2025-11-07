@@ -27,12 +27,10 @@ const Index = () => {
     );
   }
 
-  console.log('Index.tsx: Loading is false. Session:', session?.user?.id);
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
-  if (!session) {
-    console.log('Index.tsx: No session, returning null (should have navigated).');
-    return null;
-  }
+  console.log('Index.tsx: Loading is false. Session:', session?.user?.id);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">

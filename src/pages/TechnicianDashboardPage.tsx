@@ -39,9 +39,8 @@ const TechnicianDashboardPage: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return null; // Redireciona para login
-  }
+  // Removido: if (!session) { return null; }
+  // O redirecionamento é tratado pelo useEffect acima.
 
   const getStatusClasses = (status: ServiceOrder['status']) => {
     switch (status) {
@@ -89,7 +88,15 @@ const TechnicianDashboardPage: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-gray-600 dark:text-gray-400">
-                  <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
+                  <p className="mb-2"><strong>Data:</strong> {order.issueDate.toLocaleString('pt-BR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                  })}</p>
                   <p><strong>Descrição:</strong> {order.description}</p>
                   <p className="mb-2"><strong>Atribuído a:</strong> {order.assignedTo}</p>
                   <div className="mt-4 flex justify-end">
