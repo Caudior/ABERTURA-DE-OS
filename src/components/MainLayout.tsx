@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Link, useNavigate, Outlet } from 'react-router-dom'; // Importar Outlet
+import { Link, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ interface MainLayoutProps {
   // Removido children, pois Outlet será usado
 }
 
-const MainLayout: React.FC<MainLayoutProps> = () => { // Removido children do tipo
+const MainLayout: React.FC<MainLayoutProps> = () => {
   const { session, username, userRole, logout, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -45,7 +45,6 @@ const MainLayout: React.FC<MainLayoutProps> = () => { // Removido children do ti
               <span>{username} ({userRole})</span>
             </div>
           )}
-          {/* Revertido para NavLink */}
           <NavLink to="/service-orders" icon={<ClipboardList className="h-4 w-4" />} label="Ordens de Serviço" onClick={() => setIsSheetOpen(false)} />
           {userRole === 'technician' && (
             <NavLink to="/technician-dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Minhas Ordens" onClick={() => setIsSheetOpen(false)} />
@@ -73,13 +72,13 @@ const MainLayout: React.FC<MainLayoutProps> = () => { // Removido children do ti
   }
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+    <div className="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] overflow-hidden"> {/* Adicionado h-screen e overflow-hidden */}
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block">
+      <div className="hidden border-r bg-muted/40 md:block h-full overflow-y-auto"> {/* Adicionado h-full e overflow-y-auto */}
         {sidebarContent}
       </div>
       {/* Mobile Header and Content */}
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full overflow-y-auto"> {/* Adicionado h-full e overflow-y-auto */}
         <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6 md:hidden">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
