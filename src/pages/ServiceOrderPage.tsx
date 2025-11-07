@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from '@/components/ui/input'; // Importar o componente Input
 import Logo from '@/components/Logo';
 import { parse, addHours, isBefore } from 'date-fns'; // Importar funções de data
 
@@ -22,6 +23,8 @@ const ServiceOrderPage: React.FC = () => {
   const { serviceOrders } = useServiceOrders();
   const navigate = useNavigate();
   const [filterStatus, setFilterStatus] = useState<'Todos' | ServiceOrder['status']>('Todos');
+  const [searchOsNumber, setSearchOsNumber] = useState(''); // Novo estado para pesquisa por OS
+  const [searchClientName, setSearchClientName] = useState(''); // Novo estado para pesquisa por cliente
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -52,10 +55,17 @@ const ServiceOrderPage: React.FC = () => {
   };
 
   const filteredOrders = serviceOrders.filter(order => {
-    if (filterStatus === 'Todos') {
-      return true;
-    }
-    return order.status === filterStatus;
+    // Filtrar por status
+    const statusMatch = filterStatus === 'Todos' || order.status === filterStatus;
+
+    // Filtrar por número da OS
+    const osNumberString = order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8);
+    const osNumberMatch = searchOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
+
+    // Filtrar por nome do cliente
+    const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
+
+    return statusMatch && osNumberMatch && clientNameMatch;
   });
 
   const getStatusClasses = (order: ServiceOrder) => {
@@ -85,12 +95,24 @@ const ServiceOrderPage: React.FC = () => {
             <Logo />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ordens de Serviço</h1>
           </div>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+            <Input
+              placeholder="Pesquisar por OS #"
+              value={searchOsNumber}
+              onChange={(e) => setSearchOsNumber(e.target.value)}
+              className="w-full sm:w-[180px]"
+            />
+            <Input
+              placeholder="Pesquisar por Cliente"
+              value={searchClientName}
+              onChange={(e) => setSearchClientName(e.target.value)}
+              className="w-full sm:w-[180px]"
+            />
             <Select
               value={filterStatus}
               onValueChange={(value: 'Todos' | ServiceOrder['status']) => setFilterStatus(value)}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filtrar por Status" />
               </SelectTrigger>
               <SelectContent>
