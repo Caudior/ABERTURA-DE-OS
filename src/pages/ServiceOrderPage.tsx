@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from '@/components/ui/input'; // Importar o componente Input
 import Logo from '@/components/Logo';
-import { parse, addHours, isBefore } from 'date-fns'; // Importar funções de data
+import { parse, addHours, isBefore, startOfDay, endOfDay } from 'date-fns'; // Importar funções de data
+import { DateRange } from 'react-day-picker'; // Importar DateRange
+import { DatePickerWithRange } from '@/components/ui/date-range-picker'; // Importar o novo componente
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
@@ -25,6 +27,7 @@ const ServiceOrderPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'Todos' | ServiceOrder['status']>('Todos');
   const [searchOsNumber, setSearchOsNumber] = useState(''); // Novo estado para pesquisa por OS
   const [searchClientName, setSearchClientName] = useState(''); // Novo estado para pesquisa por cliente
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // Novo estado para o filtro de período
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -65,7 +68,17 @@ const ServiceOrderPage: React.FC = () => {
     // Filtrar por nome do cliente
     const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
 
-    return statusMatch && osNumberMatch && clientNameMatch;
+    // Filtrar por período de datas
+    let dateRangeMatch = true;
+    if (dateRange?.from) {
+      const orderIssueDate = parse(order.issueDate, 'dd/MM/yyyy HH:mm:ss', new Date());
+      const start = startOfDay(dateRange.from);
+      const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from); // Se apenas 'from' for selecionado, filtra para aquele dia
+
+      dateRangeMatch = orderIssueDate >= start && orderIssueDate <= end;
+    }
+
+    return statusMatch && osNumberMatch && clientNameMatch && dateRangeMatch;
   });
 
   const getStatusClasses = (order: ServiceOrder) => {
@@ -125,6 +138,11 @@ const ServiceOrderPage: React.FC = () => {
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
               </SelectContent>
             </Select>
+            <DatePickerWithRange
+              date={dateRange}
+              onDateChange={setDateRange}
+              className="w-full sm:w-[240px]"
+            />
             <Link to="/service-orders/new">
               <Button className="w-full sm:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
