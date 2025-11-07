@@ -2,11 +2,10 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { session, loading, username, logout } = useAuth();
+  const { session, loading, username } = useAuth();
   const navigate = useNavigate();
 
   console.log('Index.tsx: Rendering Index. Loading:', loading, 'Session:', session?.user?.id);
@@ -19,11 +18,6 @@ const Index = () => {
     }
   }, [session, loading, navigate]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
   if (loading) {
     console.log('Index.tsx: Displaying loading state. Current loading:', loading);
     return (
@@ -33,7 +27,7 @@ const Index = () => {
     );
   }
 
-  console.log('Index.tsx: Loading is false. Session:', session?.user?.id); // Novo log aqui
+  console.log('Index.tsx: Loading is false. Session:', session?.user?.id);
 
   if (!session) {
     console.log('Index.tsx: No session, returning null (should have navigated).');
@@ -41,7 +35,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex flex-col items-center justify-center h-full p-4">
       <div className="text-center space-y-6">
         <Logo />
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
@@ -56,30 +50,8 @@ const Index = () => {
           Sua plataforma para gerenciar ordens de serviço.
         </p>
         <p className="text-lg text-gray-500 dark:text-gray-400">
-          Navegue usando o menu lateral (em breve) ou comece a gerenciar suas tarefas.
+          Use o menu lateral para navegar pelas funcionalidades do sistema.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-          <Link to="/service-orders">
-            <Button>
-              Ver Ordens de Serviço
-            </Button>
-          </Link>
-          {username && (
-            <Link to="/technician-dashboard">
-              <Button variant="secondary">
-                Minhas Ordens ({username})
-              </Button>
-            </Link>
-          )}
-          <Link to="/register-technician">
-            <Button variant="outline">
-              Cadastrar Técnico
-            </Button>
-          </Link>
-          <Button variant="destructive" onClick={handleLogout}>
-            Sair
-          </Button>
-        </div>
       </div>
       <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
         Versão: V.10.0.0.1
