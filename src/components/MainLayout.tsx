@@ -25,6 +25,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setIsSheetOpen(false); // Fecha o sheet após o logout
   };
 
+  // Temporarily changing NavLink for testing purposes
   const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; onClick?: () => void }> = ({ to, icon, label, onClick }) => (
     <Link to={to} onClick={onClick} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 transition-all hover:text-primary dark:text-gray-50 dark:hover:text-primary">
       {icon}
@@ -45,7 +46,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <span>{username} ({userRole})</span>
             </div>
           )}
-          <NavLink to="/service-orders" icon={<ClipboardList className="h-4 w-4" />} label="Ordens de Serviço" onClick={() => setIsSheetOpen(false)} />
+          {/* Modified for testing: Using Button and navigate directly */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 transition-all hover:text-primary dark:text-gray-50 dark:hover:text-primary"
+            onClick={() => {
+              console.log('Navigating to /service-orders via Button');
+              navigate("/service-orders");
+              setIsSheetOpen(false);
+            }}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Ordens de Serviço
+          </Button>
           {userRole === 'technician' && (
             <NavLink to="/technician-dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Minhas Ordens" onClick={() => setIsSheetOpen(false)} />
           )}
@@ -70,9 +83,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </div>
     );
   }
-
-  // Removido: if (!session) { return null; }
-  // O redirecionamento para login será tratado pelos useEffects das páginas filhas.
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
