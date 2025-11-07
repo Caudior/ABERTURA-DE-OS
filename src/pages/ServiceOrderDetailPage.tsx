@@ -248,7 +248,15 @@ const ServiceOrderDetailPage: React.FC = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Data de Abertura</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{order.issueDate}</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">{order.issueDate.toLocaleString('pt-BR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            })}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Descrição</p>

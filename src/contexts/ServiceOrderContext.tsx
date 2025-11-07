@@ -32,7 +32,7 @@ export interface ServiceOrder {
   clientName: string; // Para exibição, derivado de client_id
   description: string;
   status: 'Pendente' | 'Em Andamento' | 'Concluído' | 'Cancelado' | 'Em Deslocamento' | 'Chegou';
-  issueDate: string; // created_at do Supabase
+  issueDate: Date; // Alterado para tipo Date
   assigned_technician_id?: string; // ID do técnico no Supabase
   assignedTo?: string; // Para exibição, nome do técnico
   created_by: string; // ID do usuário que criou a OS
@@ -120,15 +120,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
         clientName: currentClientsMap.get(so.client_id) || 'Cliente Desconhecido',
         description: so.description,
         status: statusMapFromSupabase[so.status] || 'Pendente',
-        issueDate: new Date(so.created_at).toLocaleString('pt-BR', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        }),
+        issueDate: new Date(so.created_at), // Armazenar como objeto Date
         assigned_technician_id: so.assigned_technician_id,
         assignedTo: so.assigned_technician_id ? currentProfilesMap.get(so.assigned_technician_id) : undefined,
         created_by: so.created_by,
@@ -237,15 +229,7 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       clientName: clientNameForDisplay,
       description: insertedOrder.description,
       status: statusMapFromSupabase[insertedOrder.status] || 'Pendente',
-      issueDate: new Date(insertedOrder.created_at).toLocaleString('pt-BR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      }),
+      issueDate: new Date(insertedOrder.created_at), // Armazenar como objeto Date
       assigned_technician_id: insertedOrder.assigned_technician_id,
       assignedTo: assignedTo,
       created_by: insertedOrder.created_by,

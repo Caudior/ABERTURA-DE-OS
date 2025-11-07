@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from '@/components/ui/input'; // Importar o componente Input
 import Logo from '@/components/Logo';
-import { parse, addHours, isBefore, startOfDay, endOfDay } from 'date-fns'; // Importar funções de data
+import { addHours, isBefore, startOfDay, endOfDay } from 'date-fns'; // Importar funções de data
 import { DateRange } from 'react-day-picker'; // Importar DateRange
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'; // Importar o novo componente
 
@@ -50,9 +50,9 @@ const ServiceOrderPage: React.FC = () => {
   // Função para verificar se a OS está pendente e há mais de 48 horas
   const isOverdue = (order: ServiceOrder) => {
     if (order.status === 'Pendente') {
-      const issueDateTime = parse(order.issueDate, 'dd/MM/yyyy HH:mm:ss', new Date());
+      // issueDate agora é um objeto Date
       const fortyEightHoursAgo = addHours(new Date(), -48);
-      return isBefore(issueDateTime, fortyEightHoursAgo);
+      return isBefore(order.issueDate, fortyEightHoursAgo);
     }
     return false;
   };
@@ -71,7 +71,7 @@ const ServiceOrderPage: React.FC = () => {
     // Filtrar por período de datas
     let dateRangeMatch = true;
     if (dateRange?.from) {
-      const orderIssueDate = parse(order.issueDate, 'dd/MM/yyyy HH:mm:ss', new Date());
+      const orderIssueDate = order.issueDate; // Já é um objeto Date
       const start = startOfDay(dateRange.from);
       const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from); // Se apenas 'from' for selecionado, filtra para aquele dia
 
@@ -167,7 +167,15 @@ const ServiceOrderPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-gray-600 dark:text-gray-400">
-                <p className="mb-2"><strong>Data:</strong> {order.issueDate}</p>
+                <p className="mb-2"><strong>Data:</strong> {order.issueDate.toLocaleString('pt-BR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false,
+                })}</p>
                 <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
                 {order.assignedTo && ( // Mostrar o técnico atribuído se existir
                   <p className="mb-2">

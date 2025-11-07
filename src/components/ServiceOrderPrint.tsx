@@ -21,7 +21,15 @@ const ServiceOrderPrint: React.FC<ServiceOrderPrintProps> = ({ order, historyEnt
       <div style={{ marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
         <h2 style={{ fontSize: '13px', marginBottom: '5px', color: '#004A99' }}>Detalhes da Ordem</h2>
         <p style={{ marginBottom: '2px' }}><strong>Cliente:</strong> {order.clientName}</p>
-        <p style={{ marginBottom: '2px' }}><strong>Data de Abertura:</strong> {order.issueDate}</p>
+        <p style={{ marginBottom: '2px' }}><strong>Data de Abertura:</strong> {order.issueDate.toLocaleString('pt-BR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        })}</p>
         <p style={{ marginBottom: '2px' }}><strong>Descrição:</strong> {order.description}</p>
         <p style={{ marginBottom: '2px' }}><strong>Status Atual:</strong> {order.status}</p>
         {order.assignedTo && <p style={{ marginBottom: '2px' }}><strong>Técnico Atribuído:</strong> {order.assignedTo}</p>}
