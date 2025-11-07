@@ -14,7 +14,7 @@
     --popover-foreground: 222.2 84% 4.9%;
 
     /* Brand Colors */
-    --primary: 210 100% 30%; /* Azul do logo #004A99 */
+    --primary: 210 100% 45%; /* Azul mais vibrante para o calendário e elementos primários */
     --primary-foreground: 0 0% 100%; /* Branco para texto no azul */
 
     --secondary: 210 40% 96.1%;
@@ -56,7 +56,7 @@
     --popover-foreground: 210 40% 98%;
 
     /* Brand Colors para Dark Mode */
-    --primary: 210 100% 40%; /* Azul do logo #004A99, ligeiramente mais claro para dark mode */
+    --primary: 210 100% 55%; /* Azul mais vibrante para dark mode */
     --primary-foreground: 0 0% 100%; /* Branco */
 
     --secondary: 217.2 32.6% 17.5%;
