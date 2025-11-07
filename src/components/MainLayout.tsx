@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Outlet } from 'react-router-dom'; // Importar Outlet
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,10 @@ import { MenuIcon, LogOut, LayoutDashboard, ClipboardList, UserPlus, User } from
 import Logo from '@/components/Logo';
 
 interface MainLayoutProps {
-  children: React.ReactNode;
+  // Removido children, pois Outlet será usado
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = () => { // Removido children do tipo
   const { session, username, userRole, logout, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setIsSheetOpen(false); // Fecha o sheet após o logout
   };
 
-  // Temporarily changing NavLink for testing purposes
   const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; onClick?: () => void }> = ({ to, icon, label, onClick }) => (
     <Link to={to} onClick={onClick} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 transition-all hover:text-primary dark:text-gray-50 dark:hover:text-primary">
       {icon}
@@ -46,19 +45,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <span>{username} ({userRole})</span>
             </div>
           )}
-          {/* Modified for testing: Using Button and navigate directly */}
-          <Button
-            variant="ghost"
-            className="w-full justify-start flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 transition-all hover:text-primary dark:text-gray-50 dark:hover:text-primary"
-            onClick={() => {
-              console.log('Navigating to /service-orders via Button');
-              navigate("/service-orders");
-              setIsSheetOpen(false);
-            }}
-          >
-            <ClipboardList className="h-4 w-4" />
-            Ordens de Serviço
-          </Button>
+          {/* Revertido para NavLink */}
+          <NavLink to="/service-orders" icon={<ClipboardList className="h-4 w-4" />} label="Ordens de Serviço" onClick={() => setIsSheetOpen(false)} />
           {userRole === 'technician' && (
             <NavLink to="/technician-dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Minhas Ordens" onClick={() => setIsSheetOpen(false)} />
           )}
@@ -113,7 +101,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          {children}
+          <Outlet /> {/* Aqui é onde as rotas aninhadas serão renderizadas */}
         </main>
       </div>
     </div>
