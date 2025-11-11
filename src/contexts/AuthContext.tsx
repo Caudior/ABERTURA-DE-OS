@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect for initial session and listener setup. Setting loading to true.');
     setLoading(true); // Inicia o estado de carregamento
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange( // Renomeado para 'data'
       async (_event, currentSession) => {
         console.log('AuthContext: onAuthStateChange triggered, event:', _event, 'session user ID:', currentSession?.user?.id);
         setSession(currentSession);
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
-      authListener.unsubscribe();
+      data.subscription.unsubscribe(); // Correção: usar data.subscription.unsubscribe()
     };
   }, []); // Dependências vazias para rodar apenas na montagem
 
