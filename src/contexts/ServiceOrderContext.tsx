@@ -247,6 +247,8 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
     const currentUserId = session.user.id;
     const supabaseStatus = statusMapToSupabase[newStatus];
 
+    console.log('ServiceOrderContext: updateServiceOrderStatus called. Order ID:', id, 'New Status (UI):', newStatus, 'New Status (Supabase):', supabaseStatus, 'By User ID:', currentUserId, 'Role:', userRole);
+
     const { data: currentOrderData, error: fetchError } = await supabase
       .from('service_orders')
       .select('status')
@@ -254,13 +256,14 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .single();
 
     if (fetchError || !currentOrderData) {
-      console.error('Error fetching current service order status:', fetchError);
+      console.error('ServiceOrderContext: Error fetching current service order status:', fetchError);
       showError('Erro ao obter status atual da ordem de serviço.');
       return;
     }
 
     const previousSupabaseStatus = currentOrderData.status;
     const previousUiStatus = statusMapFromSupabase[previousSupabaseStatus] || 'Pendente';
+    console.log('ServiceOrderContext: Previous Supabase Status:', previousSupabaseStatus, 'Previous UI Status:', previousUiStatus);
 
     const { error: updateError } = await supabase
       .from('service_orders')
@@ -268,10 +271,11 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       .eq('id', id);
 
     if (updateError) {
-      console.error('Supabase Error updating service order status:', updateError);
+      console.error('ServiceOrderContext: Supabase Error updating service order status:', updateError);
       showError(updateError.message || 'Erro ao atualizar status da ordem de serviço.');
       return;
     }
+    console.log('ServiceOrderContext: Service order status updated successfully in Supabase.');
 
     // Always insert history when status changes
     const { error: historyError } = await supabase
@@ -285,8 +289,10 @@ export const ServiceOrderProvider: React.FC<{ children: ReactNode }> = ({ childr
       });
 
     if (historyError) {
-      console.error('Supabase Error inserting service order history:', historyError);
+      console.error('ServiceOrderContext: Supabase Error inserting service order history:', historyError);
       showError('Erro ao registrar histórico da ordem de serviço.');
+    } else {
+      console.log('ServiceOrderContext: Service order history inserted successfully.');
     }
 
     setServiceOrders((prevOrders) =>

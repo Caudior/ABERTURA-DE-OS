@@ -72,10 +72,13 @@ const ServiceOrderDetailPage: React.FC = () => {
       const foundOrder = serviceOrders.find((o) => o.id === id);
       setOrder(foundOrder);
       if (foundOrder) {
+        console.log('ServiceOrderDetailPage: Order found. ID:', foundOrder.id, 'Status:', foundOrder.status, 'AssignedTo:', foundOrder.assignedTo);
         setCurrentStatus(foundOrder.status);
         setSelectedTechnician(foundOrder.assignedTo);
         fetchServiceOrderHistory(foundOrder.id); // Chamar a nova função para buscar o histórico
         setTechnicianNotes(''); // Limpar o campo de observações para novas entradas
+      } else {
+        console.log('ServiceOrderDetailPage: Order with ID', id, 'not found in serviceOrders.');
       }
     }
   }, [id, serviceOrders]);
@@ -101,23 +104,33 @@ const ServiceOrderDetailPage: React.FC = () => {
   };
 
   const handleStatusChange = async (newStatus: ServiceOrder['status']) => {
-    if (order && newStatus !== currentStatus) {
-      if (newStatus === 'Concluído') {
-        if (userRole !== 'admin') {
-          showError('Apenas administradores podem finalizar uma ordem de serviço.');
-          return;
-        }
-        if (!technicianNotes.trim()) {
-          showError('Por favor, adicione as observações do técnico para finalizar a OS.');
-          return;
-        }
+    console.log('ServiceOrderDetailPage: handleStatusChange called. Current UI Status:', currentStatus, 'New UI Status:', newStatus, 'User Role:', userRole);
+    if (!order) {
+      console.error('ServiceOrderDetailPage: handleStatusChange called but no order is loaded.');
+      return;
+    }
+
+    if (newStatus === 'Concluído') {
+      if (userRole !== 'admin') {
+        showError('Apenas administradores podem finalizar uma ordem de serviço.');
+        return;
       }
+      if (!technicianNotes.trim()) {
+        showError('Por favor, adicione as observações do técnico para finalizar a OS.');
+        return;
+      }
+    }
+
+    if (newStatus !== currentStatus) {
+      console.log('ServiceOrderDetailPage: Status change detected. Calling updateServiceOrderStatus.');
       await updateServiceOrderStatus(order.id, newStatus, newStatus === 'Concluído' ? technicianNotes : undefined);
-      setCurrentStatus(newStatus);
+      setCurrentStatus(newStatus); // Update UI state immediately
       if (newStatus === 'Concluído') {
         setTechnicianNotes(''); // Limpar notas após finalizar
       }
       fetchServiceOrderHistory(order.id); // Re-buscar o histórico após a mudança de status
+    } else {
+      console.log('ServiceOrderDetailPage: New status is the same as current status. No update needed.');
     }
   };
 
@@ -181,9 +194,6 @@ const ServiceOrderDetailPage: React.FC = () => {
       </div>
     );
   }
-
-  // Removido: if (!session) { return null; }
-  // O redirecionamento é tratado pelo useEffect acima.
 
   if (!order) {
     return (
