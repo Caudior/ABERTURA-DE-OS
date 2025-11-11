@@ -67,27 +67,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect for initial session and listener setup. Setting loading to true.');
     setLoading(true); // Inicia o estado de carregamento
 
-    const { data } = supabase.auth.onAuthStateChange( // Renomeado para 'data'
+    const { data } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
         console.log('AuthContext: onAuthStateChange triggered, event:', _event, 'session user ID:', currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user || null);
-        if (currentSession) {
-          await fetchUserProfile(currentSession.user);
-          await fetchUserRole(currentSession.user.id);
-        } else {
+        try {
+          if (currentSession) {
+            await fetchUserProfile(currentSession.user);
+            await fetchUserRole(currentSession.user.id);
+          } else {
+            setUsername(null);
+            setUserRole(null);
+          }
+        } catch (error) {
+          console.error("AuthContext: Error during profile/role fetch in onAuthStateChange:", error);
+          // Opcionalmente, você pode querer mostrar um erro na UI aqui
           setUsername(null);
           setUserRole(null);
+        } finally {
+          setLoading(false); // Define loading como false após processar qualquer mudança de estado de autenticação
+          console.log('AuthContext: onAuthStateChange finished processing. Setting loading to false.');
         }
-        setLoading(false); // Define loading como false após processar qualquer mudança de estado de autenticação
-        console.log('AuthContext: onAuthStateChange finished processing. Setting loading to false.');
       }
     );
 
     return () => {
-      data.subscription.unsubscribe(); // Correção: usar data.subscription.unsubscribe()
+      data.subscription.unsubscribe();
     };
-  }, []); // Dependências vazias para rodar apenas na montagem
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
