@@ -14,42 +14,48 @@ import NewServiceOrderPage from "./pages/NewServiceOrderPage";
 import ServiceOrderDetailPage from "./pages/ServiceOrderDetailPage";
 import TechnicianDashboardPage from "./pages/TechnicianDashboardPage";
 import TechnicianRegistrationPage from "./pages/TechnicianRegistrationPage";
-import MainLayout from "./components/MainLayout"; // Importar o MainLayout
+import MainLayout from "./components/MainLayout";
+import React from "react"; // Importar React para StrictMode
 
 const queryClient = new QueryClient();
 
 const App = () => {
   console.log('App component is rendering');
   return (
-    <QueryClientProvider client={queryClient}>
-      <>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <TechnicianProvider>
-              <ServiceOrderProvider>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
-                  {/* Rotas que usam o MainLayout */}
-                  <Route element={<MainLayout />}>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/service-orders" element={<ServiceOrderPage />} />
-                    <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
-                    <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
-                    <Route path="/technician-dashboard" element={<TechnicianDashboardPage />} />
-                    <Route path="/register-technician" element={<TechnicianRegistrationPage />} />
-                  </Route>
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ServiceOrderProvider>
-            </TechnicianProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </>
-    </QueryClientProvider>
+    <React.StrictMode> {/* Envolvendo todo o aplicativo em StrictMode */}
+      <QueryClientProvider client={queryClient}>
+        <>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            {console.log('App: Rendering AuthProvider')}
+            <AuthProvider>
+              {console.log('App: Rendering TechnicianProvider')}
+              <TechnicianProvider>
+                {console.log('App: Rendering ServiceOrderProvider')}
+                <ServiceOrderProvider>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
+                    {/* Rotas que usam o MainLayout */}
+                    <Route element={<MainLayout />}>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/service-orders" element={<ServiceOrderPage />} />
+                      <Route path="/service-orders/new" element={<NewServiceOrderPage />} />
+                      <Route path="/service-orders/:id" element={<ServiceOrderDetailPage />} />
+                      <Route path="/technician-dashboard" element={<TechnicianDashboardPage />} />
+                      <Route path="/register-technician" element={<TechnicianRegistrationPage />} />
+                    </Route>
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </ServiceOrderProvider>
+              </TechnicianProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 

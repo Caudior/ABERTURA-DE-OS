@@ -18,7 +18,19 @@ interface AuthContextType {
   fetchUserRole: (userId: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Fornece um valor padrão completo para o contexto
+const AuthContext = createContext<AuthContextType>({
+  session: null,
+  user: null,
+  userRole: null,
+  username: null,
+  loading: true,
+  login: async () => { throw new Error('login must be used within an AuthProvider'); },
+  signup: async () => { throw new Error('signup must be used within an AuthProvider'); },
+  logout: async () => { throw new Error('logout must be used within an AuthProvider'); },
+  fetchUserProfile: async () => { throw new Error('fetchUserProfile must be used within an AuthProvider'); },
+  fetchUserRole: async () => { throw new Error('fetchUserRole must be used within an AuthProvider'); },
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -67,59 +79,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext: useEffect triggered for initial setup.');
     setLoading(true); // Garante que loading seja true no início da configuração inicial
 
-    const getAndSetSession = async () => {
-      try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        console.log('AuthContext: Initial session fetched:', initialSession?.user?.id);
-        setSession(initialSession);
-        setUser(initialSession?.user || null);
-
-        if (initialSession) {
-          await fetchUserProfile(initialSession.user);
-          await fetchUserRole(initialSession.user.id);
-        } else {
-          setUsername(null);
-          setUserRole(null);
-        }
-      } catch (error) {
-        console.error("AuthContext: Error during initial session fetch or profile/role fetch:", error);
-        setUsername(null);
-        setUserRole(null);
-      } finally {
-        setLoading(false); // Sempre define loading como false após a verificação inicial da sessão
-        console.log('AuthContext: Initial session setup finished. Loading set to false.');
-      }
-    };
-
-    getAndSetSession(); // Executa imediatamente na montagem
-
-    // Configura o listener para mudanças subsequentes no estado de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
         console.log('AuthContext: onAuthStateChange triggered, event:', _event, 'session user ID:', currentSession?.user?.id);
-        // Para mudanças subsequentes, atualizamos os dados da sessão e do usuário
-        // mas não necessariamente alternamos o estado 'loading' global,
-        // já que as funções de login/logout lidam com seus próprios estados de carregamento.
         setSession(currentSession);
         setUser(currentSession?.user || null);
-        if (currentSession) {
-          await fetchUserProfile(currentSession.user);
-          await fetchUserRole(currentSession.user.id);
-        } else {
+        try {
+          if (currentSession) {
+            await fetchUserProfile(currentSession.user);
+            await fetchUserRole(currentSession.user.id);
+          } else {
+            setUsername(null);
+            setUserRole(null);
+          }
+        } catch (error) {
+          console.error("AuthContext: Error during profile/role fetch in onAuthStateChange:", error);
           setUsername(null);
           setUserRole(null);
+        } finally {
+          setLoading(false); // Define loading como false após processar qualquer mudança de estado de autenticação
+          console.log('AuthContext: onAuthStateChange finished processing. Setting loading to false.');
         }
-        console.log('AuthContext: onAuthStateChange processed event:', _event);
       }
     );
 
     return () => {
-      console.log('AuthContext: Unsubscribing from auth state changes.');
-      subscription.unsubscribe();
+      data.subscription.unsubscribe();
     };
-  }, []); // Array de dependências vazio significa que este efeito é executado uma vez na montagem e limpo na desmontagem.
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -213,9 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  // Não há necessidade de verificar null/undefined aqui, pois o createContext já fornece um valor padrão
+  return useContext(AuthContext);
 };
