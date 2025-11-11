@@ -64,26 +64,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('AuthContext: useEffect for initial session and listener setup.');
-    const getInitialSession = async () => {
-      console.log('AuthContext: getInitialSession started.');
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log('AuthContext: getInitialSession fetched session. User ID:', initialSession?.user?.id);
-        setSession(initialSession);
-        setUser(initialSession?.user || null);
-        if (initialSession) {
-          await fetchUserProfile(initialSession.user);
-          await fetchUserRole(initialSession.user.id);
-        }
-      } catch (error) {
-        console.error("Error getting initial session:", error);
-      } finally {
-        console.log('AuthContext: getInitialSession finished. Setting loading to false.');
-        setLoading(false); // Garante que o loading seja false após a verificação inicial
-      }
-    };
-    getInitialSession();
+    console.log('AuthContext: useEffect for initial session and listener setup. Setting loading to true.');
+    setLoading(true); // Inicia o estado de carregamento
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, currentSession) => {
@@ -97,8 +79,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUsername(null);
           setUserRole(null);
         }
-        // Não alteramos o estado 'loading' aqui, pois 'getInitialSession' já o gerencia para a carga inicial
-        // e as funções de login/logout gerenciam para suas operações específicas.
+        setLoading(false); // Define loading como false após processar qualquer mudança de estado de autenticação
+        console.log('AuthContext: onAuthStateChange finished processing. Setting loading to false.');
       }
     );
 
