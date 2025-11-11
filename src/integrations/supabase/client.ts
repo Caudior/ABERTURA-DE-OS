@@ -9,7 +9,9 @@ console.log('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Loaded' : 'Undefined')
 
 // Adicionando uma verificação explícita para garantir que as variáveis existam
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase URL and/or Anon Key are not loaded from environment variables. Please ensure your .env file is correctly configured at the project root.');
   throw new Error('Supabase URL and/or Anon Key are not loaded from environment variables. Please ensure your .env file is correctly configured at the project root.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+console.log('Supabase client created successfully.'); // Adicionado este log
