@@ -23,6 +23,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
     await logout();
     navigate("/login");
     setIsSheetOpen(false); // Fecha o sheet após o logout
+    window.location.reload(); // Força um recarregamento completo da página para limpar o cache
   };
 
   const NavLink: React.FC<{ to: string; icon: React.ReactNode; label: string; onClick?: () => void }> = ({ to, icon, label, onClick }) => (

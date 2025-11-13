@@ -171,7 +171,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         showError(error.message);
       } else {
         showSuccess("Você foi desconectado com sucesso!");
-        console.log('AuthContext: Logout successful.');
+        // Explicitly clear state after successful logout
+        setSession(null);
+        setUser(null);
+        setUserRole(null);
+        setUsername(null);
+        console.log('AuthContext: Logout successful, state cleared.');
       }
     } catch (error: any) {
       showError(error.message);
@@ -200,6 +205,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-  // Não há necessidade de verificar null/undefined aqui, pois o createContext já fornece um valor padrão
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
