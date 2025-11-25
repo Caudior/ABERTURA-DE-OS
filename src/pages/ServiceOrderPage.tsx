@@ -15,9 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
-import { addHours, isBefore, startOfDay, endOfDay, differenceInDays } from 'date-fns'; // Importar differenceInDays
+import { addHours, isBefore, startOfDay, endOfDay, differenceInDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import Logo from '@/components/Logo'; // Certifique-se de que o Logo está importado aqui
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
@@ -53,7 +54,8 @@ const ServiceOrderPage: React.FC = () => {
   const filteredOrders = serviceOrders.filter(order => {
     const statusMatch = filterStatus === 'Todos' || order.status === filterStatus;
     const osNumberString = order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8);
-    const osNumberMatch = searchOsOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
+    // CORREÇÃO AQUI: searchOsOsNumber foi alterado para searchOsNumber
+    const osNumberMatch = searchOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
     const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
 
     let dateRangeMatch = true;
@@ -140,7 +142,7 @@ const ServiceOrderPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => {
-            const daysOpen = differenceInDays(new Date(), order.issueDate); // Calcular dias em aberto
+            const daysOpen = differenceInDays(new Date(), order.issueDate);
             return (
               <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader>
@@ -163,7 +165,7 @@ const ServiceOrderPage: React.FC = () => {
                     second: '2-digit',
                     hour12: false,
                   })}</p>
-                  <p className="mb-2"><strong>Dias em Aberto:</strong> <span className="font-bold text-primary">{daysOpen}</span></p> {/* Exibir dias em aberto */}
+                  <p className="mb-2"><strong>Dias em Aberto:</strong> <span className="font-bold text-primary">{daysOpen}</span></p>
                   <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
                   {order.assignedTo && (
                     <p className="mb-2">
