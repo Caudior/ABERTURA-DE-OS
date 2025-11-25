@@ -3,6 +3,7 @@ import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ServiceOrderStatusChart from "@/components/ServiceOrderStatusChart"; // Importar o novo componente
 
 const Index = () => {
   const { session, loading, username } = useAuth();
@@ -27,14 +28,11 @@ const Index = () => {
     );
   }
 
-  // Removido: if (!session) { return null; }
-  // O redirecionamento é tratado pelo useEffect acima.
-
   console.log('Index.tsx: Loading is false. Session:', session?.user?.id);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-6 mb-8">
         <Logo />
         <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
           Bem-vindo ao ServiceFlow!
@@ -51,6 +49,12 @@ const Index = () => {
           Use o menu lateral para navegar pelas funcionalidades do sistema.
         </p>
       </div>
+
+      {/* Adicionar o gráfico de status das ordens de serviço */}
+      <div className="w-full max-w-md lg:max-w-2xl mb-8">
+        <ServiceOrderStatusChart />
+      </div>
+
       <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
         Versão: V.10.0.0.1
       </p>

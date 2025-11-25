@@ -14,20 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from '@/components/ui/input'; // Importar o componente Input
-import Logo from '@/components/Logo';
-import { addHours, isBefore, startOfDay, endOfDay } from 'date-fns'; // Importar funções de data
-import { DateRange } from 'react-day-picker'; // Importar DateRange
-import { DatePickerWithRange } from '@/components/ui/date-range-picker'; // Importar o novo componente
+import { Input } from '@/components/ui/input';
+import { addHours, isBefore, startOfDay, endOfDay, differenceInDays } from 'date-fns'; // Importar differenceInDays
+import { DateRange } from 'react-day-picker';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 
 const ServiceOrderPage: React.FC = () => {
   const { session, loading: authLoading } = useAuth();
   const { serviceOrders } = useServiceOrders();
   const navigate = useNavigate();
   const [filterStatus, setFilterStatus] = useState<'Todos' | ServiceOrder['status']>('Todos');
-  const [searchOsNumber, setSearchOsNumber] = useState(''); // Novo estado para pesquisa por OS
-  const [searchClientName, setSearchClientName] = useState(''); // Novo estado para pesquisa por cliente
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // Novo estado para o filtro de período
+  const [searchOsNumber, setSearchOsNumber] = useState('');
+  const [searchClientName, setSearchClientName] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -43,13 +42,8 @@ const ServiceOrderPage: React.FC = () => {
     );
   }
 
-  // Removido: if (!session) { return null; }
-  // O redirecionamento é tratado pelo useEffect acima.
-
-  // Função para verificar se a OS está pendente e há mais de 48 horas
   const isOverdue = (order: ServiceOrder) => {
     if (order.status === 'Pendente') {
-      // issueDate agora é um objeto Date
       const fortyEightHoursAgo = addHours(new Date(), -48);
       return isBefore(order.issueDate, fortyEightHoursAgo);
     }
@@ -57,26 +51,16 @@ const ServiceOrderPage: React.FC = () => {
   };
 
   const filteredOrders = serviceOrders.filter(order => {
-    // Filtrar por status
     const statusMatch = filterStatus === 'Todos' || order.status === filterStatus;
-
-    // Filtrar por número da OS
     const osNumberString = order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8);
-    const osNumberMatch = searchOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
-
-    // Filtrar por nome do cliente
+    const osNumberMatch = searchOsOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
     const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
 
-    // Filtrar por período de datas
     let dateRangeMatch = true;
     if (dateRange?.from) {
-      // Normaliza a data da ordem para o início do seu dia local
       const orderLocalDayStart = startOfDay(order.issueDate);
-      // Normaliza o início e fim do período de filtro para os limites do dia local
       const filterRangeStart = startOfDay(dateRange.from);
       const filterRangeEnd = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-
-      // Compara os timestamps normalizados
       dateRangeMatch = orderLocalDayStart.getTime() >= filterRangeStart.getTime() && orderLocalDayStart.getTime() <= filterRangeEnd.getTime();
     }
 
@@ -155,48 +139,51 @@ const ServiceOrderPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOrders.map((order) => (
-            <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center text-lg">
-                  {/* Exibir orderNumber formatado, se existir, senão o ID original */}
-                  <span>OS #{order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)} - {order.clientName}</span>
-                  <span
-                    className={getStatusClasses(order)} // Usar a nova função getStatusClasses
-                  >
-                    {order.status}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-gray-600 dark:text-gray-400">
-                <p className="mb-2"><strong>Data:</strong> {order.issueDate.toLocaleString('pt-BR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                })}</p>
-                <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
-                {order.assignedTo && ( // Mostrar o técnico atribuído se existir
-                  <p className="mb-2">
-                    <strong>Técnico:</strong>{' '}
-                    <span className="text-red-600 dark:text-red-400"> {/* Adicionado estilo aqui */}
-                      {order.assignedTo}
+          {filteredOrders.map((order) => {
+            const daysOpen = differenceInDays(new Date(), order.issueDate); // Calcular dias em aberto
+            return (
+              <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center text-lg">
+                    <span>OS #{order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8)} - {order.clientName}</span>
+                    <span
+                      className={getStatusClasses(order)}
+                    >
+                      {order.status}
                     </span>
-                  </p>
-                )}
-                <div className="mt-4 flex justify-end">
-                  <Link to={`/service-orders/${order.id}`}>
-                    <Button variant="outline" size="sm">
-                      Ver Detalhes
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mb-2"><strong>Data:</strong> {order.issueDate.toLocaleString('pt-BR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false,
+                  })}</p>
+                  <p className="mb-2"><strong>Dias em Aberto:</strong> <span className="font-bold text-primary">{daysOpen}</span></p> {/* Exibir dias em aberto */}
+                  <p className="mb-2"><strong>Descrição:</strong> {order.description}</p>
+                  {order.assignedTo && (
+                    <p className="mb-2">
+                      <strong>Técnico:</strong>{' '}
+                      <span className="text-red-600 dark:text-red-400">
+                        {order.assignedTo}
+                      </span>
+                    </p>
+                  )}
+                  <div className="mt-4 flex justify-end">
+                    <Link to={`/service-orders/${order.id}`}>
+                      <Button variant="outline" size="sm">
+                        Ver Detalhes
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredOrders.length === 0 && (
