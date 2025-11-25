@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MenuIcon, LogOut, LayoutDashboard, ClipboardList, UserPlus, User } from 'lucide-react';
 import Logo from '@/components/Logo';
+import ServiceOrderStatusChart from '@/components/ServiceOrderStatusChart'; // Importar o componente do gráfico
 
 interface MainLayoutProps {
   // Removido children, pois Outlet será usado
@@ -54,6 +55,10 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
             <NavLink to="/register-technician" icon={<UserPlus className="h-4 w-4" />} label="Cadastrar Técnico" onClick={() => setIsSheetOpen(false)} />
           )}
         </nav>
+        {/* Adicionar o gráfico de status das ordens de serviço aqui */}
+        <div className="p-4 mt-4"> {/* Adicionado padding e margin-top para espaçamento */}
+          <ServiceOrderStatusChart />
+        </div>
       </div>
       <div className="mt-auto p-4 border-t">
         <Button onClick={handleLogout} className="w-full" variant="destructive">
@@ -73,13 +78,13 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
   }
 
   return (
-    <div className="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] overflow-hidden"> {/* Adicionado h-screen e overflow-hidden */}
+    <div className="grid h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] overflow-hidden">
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block h-full overflow-y-auto"> {/* Adicionado h-full e overflow-y-auto */}
+      <div className="hidden border-r bg-muted/40 md:block h-full overflow-y-auto">
         {sidebarContent}
       </div>
       {/* Mobile Header and Content */}
-      <div className="flex flex-col h-full overflow-y-auto"> {/* Adicionado h-full e overflow-y-auto */}
+      <div className="flex flex-col h-full overflow-y-auto">
         <header className="flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6 md:hidden">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
@@ -101,7 +106,7 @@ const MainLayout: React.FC<MainLayoutProps> = () => {
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          <Outlet /> {/* Aqui é onde as rotas aninhadas serão renderizadas */}
+          <Outlet />
         </main>
       </div>
     </div>

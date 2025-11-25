@@ -3,7 +3,7 @@ import Logo from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ServiceOrderStatusChart from "@/components/ServiceOrderStatusChart"; // Importar o novo componente
+// import ServiceOrderStatusChart from "@/components/ServiceOrderStatusChart"; // Remover esta importação
 
 const Index = () => {
   const { session, loading, username } = useAuth();
@@ -50,10 +50,10 @@ const Index = () => {
         </p>
       </div>
 
-      {/* Adicionar o gráfico de status das ordens de serviço */}
-      <div className="w-full max-w-md lg:max-w-2xl mb-8">
+      {/* Remover o gráfico de status das ordens de serviço daqui */}
+      {/* <div className="w-full max-w-md lg:max-w-2xl mb-8">
         <ServiceOrderStatusChart />
-      </div>
+      </div> */}
 
       <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
         Versão: V.10.0.0.1
