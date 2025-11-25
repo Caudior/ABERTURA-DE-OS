@@ -36,7 +36,7 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <Card className="w-full h-[300px] flex items-center justify-center">
+      <Card className="w-full h-[250px] flex items-center justify-center"> {/* Altura ajustada */}
         <Skeleton className="w-full h-full" />
       </Card>
     );
@@ -47,7 +47,7 @@ const ServiceOrderStatusChart: React.FC = () => {
       <CardHeader>
         <CardTitle className="text-xl font-bold">Ordens de Serviço por Status</CardTitle>
       </CardHeader>
-      <CardContent className="h-[300px] p-0">
+      <CardContent className="h-[250px] p-0"> {/* Altura ajustada */}
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -56,7 +56,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                outerRadius={100}
+                outerRadius={80} {/* Raio externo reduzido */}
                 fill="#8884d8"
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
