@@ -28,7 +28,7 @@ const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fontSize="12px" // Tamanho da fonte explícito
       fontWeight="bold" // Negrito para destaque
     >
-      {`${(percent * 100).toFixed(0)}%`}
+      {`${(percent * 100).toFixed(1)}%`} {/* Alterado para 1 casa decimal */}
     </text>
   );
 };
