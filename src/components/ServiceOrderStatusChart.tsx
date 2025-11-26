@@ -10,6 +10,29 @@ interface ChartData {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']; // Cores para os status
 
+// Componente de rótulo personalizado para o gráfico de pizza
+const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
+  const RADIAN = Math.PI / 180;
+  // Posição do rótulo um pouco mais afastada da fatia
+  const radius = outerRadius + 25; 
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#333" // Cor escura para o texto, visível em fundos claros
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontSize="12px" // Tamanho da fonte explícito
+      fontWeight="bold" // Negrito para destaque
+    >
+      {`${name} ${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
 const ServiceOrderStatusChart: React.FC = () => {
   const { serviceOrders, loadingServiceOrders } = useServiceOrders();
   const [chartData, setChartData] = useState<ChartData[]>([]);
@@ -52,11 +75,11 @@ const ServiceOrderStatusChart: React.FC = () => {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                labelLine={true} // Alterado para true para exibir as linhas dos rótulos
-                outerRadius={80}
+                labelLine={true}
+                outerRadius={100} // Aumentado o raio externo para dar mais espaço aos rótulos
                 fill="#8884d8"
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={CustomPieLabel} // Usando o componente de rótulo personalizado
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
