@@ -80,13 +80,14 @@ const ServiceOrderStatusChart: React.FC = () => {
                 fill="#8884d8"
                 dataKey="value"
                 label={CustomPieLabel} // Usando o componente de rótulo personalizado
+                paddingAngle={5} // Adiciona um pequeno espaçamento entre as fatias
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend />
+              <Legend verticalAlign="bottom" align="center" height={36} /> {/* Movendo a legenda para baixo */}
             </PieChart>
           </ResponsiveContainer>
         ) : (
