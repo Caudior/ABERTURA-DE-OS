@@ -32,7 +32,6 @@ const ServiceOrderStatusChart: React.FC = () => {
   }, [serviceOrders]);
 
   if (loadingServiceOrders) {
-    // Substituído Card por div
     return (
       <div className="w-full h-[250px] flex items-center justify-center border rounded-lg">
         <Skeleton className="w-full h-full" />
@@ -41,14 +40,10 @@ const ServiceOrderStatusChart: React.FC = () => {
   }
 
   return (
-    // Substituído Card por div
     <div className="w-full border rounded-lg">
-      {/* Substituído CardHeader por div */}
       <div className="p-4 border-b">
-        {/* Substituído CardTitle por h2 */}
         <h2 className="text-xl font-bold">Ordens de Serviço por Status</h2>
       </div>
-      {/* Substituído CardContent por div */}
       <div className="h-[250px] p-0">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -57,8 +52,8 @@ const ServiceOrderStatusChart: React.FC = () => {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                outerRadius={80} // Raio externo reduzido
+                labelLine={true} // Alterado para true para exibir as linhas dos rótulos
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
