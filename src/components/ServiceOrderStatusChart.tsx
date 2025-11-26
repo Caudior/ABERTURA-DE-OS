@@ -13,8 +13,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 // Componente de rótulo personalizado para o gráfico de pizza
 const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
   const RADIAN = Math.PI / 180;
-  // Posição do rótulo um pouco mais afastada da fatia, ajustado para a nova altura do contêiner
-  const radius = outerRadius * 1.1; // Multiplicar por 1.1 para afastar um pouco mais
+  // Posição do rótulo ainda mais afastada da fatia
+  const radius = outerRadius + 40; // Aumentado para afastar mais
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -22,7 +22,7 @@ const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) =
     <text
       x={x}
       y={y}
-      fill="#333" // Cor escura para o texto, visível em fundos claros
+      fill="black" // Cor preta para alto contraste
       textAnchor={x > cx ? 'start' : 'end'}
       dominantBaseline="central"
       fontSize="12px" // Tamanho da fonte explícito
@@ -56,7 +56,7 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <div className="w-full h-[350px] flex items-center justify-center border rounded-lg"> {/* Altura ajustada */}
+      <div className="w-full h-[350px] flex items-center justify-center border rounded-lg">
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -67,7 +67,7 @@ const ServiceOrderStatusChart: React.FC = () => {
       <div className="p-4 border-b">
         <h2 className="text-xl font-bold">Ordens de Serviço por Status</h2>
       </div>
-      <div className="h-[350px] p-0"> {/* Altura ajustada */}
+      <div className="h-[350px] p-0">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -76,7 +76,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={true}
-                outerRadius={100}
+                outerRadius={120} // Aumentado o raio externo
                 fill="#8884d8"
                 dataKey="value"
                 label={CustomPieLabel} // Usando o componente de rótulo personalizado
