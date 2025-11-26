@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useServiceOrders } from '@/contexts/ServiceOrderContext';
-// Removendo a importação de Card, CardContent, CardHeader, CardTitle para o teste
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ChartData {
@@ -33,19 +32,24 @@ const ServiceOrderStatusChart: React.FC = () => {
   }, [serviceOrders]);
 
   if (loadingServiceOrders) {
+    // Substituído Card por div
     return (
-      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg"> {/* Substituído Card por div */}
+      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg">
         <Skeleton className="w-full h-full" />
       </div>
     );
   }
 
   return (
-    <div className="w-full border rounded-lg"> {/* Substituído Card por div */}
-      <div className="p-4 border-b"> {/* Substituído CardHeader por div */}
-        <h2 className="text-xl font-bold">Ordens de Serviço por Status</h2> {/* Substituído CardTitle por h2 */}
+    // Substituído Card por div
+    <div className="w-full border rounded-lg">
+      {/* Substituído CardHeader por div */}
+      <div className="p-4 border-b">
+        {/* Substituído CardTitle por h2 */}
+        <h2 className="text-xl font-bold">Ordens de Serviço por Status</h2>
       </div>
-      <div className="h-[250px] p-0"> {/* Substituído CardContent por div */}
+      {/* Substituído CardContent por div */}
+      <div className="h-[250px] p-0">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -54,7 +58,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                outerRadius={80} {/* Raio externo reduzido */}
+                outerRadius={80} // Raio externo reduzido
                 fill="#8884d8"
                 dataKey="value"
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
