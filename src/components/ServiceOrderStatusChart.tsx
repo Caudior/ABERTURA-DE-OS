@@ -13,8 +13,8 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 // Componente de rótulo personalizado para o gráfico de pizza
 const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
   const RADIAN = Math.PI / 180;
-  // Posição do rótulo ainda mais afastada da fatia
-  const radius = outerRadius + 40; // Aumentado para afastar mais
+  // Posição do rótulo ajustada para o tamanho menor do gráfico
+  const radius = outerRadius + 20; // Afastar um pouco da fatia
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -56,7 +56,7 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <div className="w-full h-[350px] flex items-center justify-center border rounded-lg">
+      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg"> {/* Altura ajustada */}
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -64,10 +64,8 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   return (
     <div className="w-full border rounded-lg">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-bold">Ordens de Serviço por Status</h2>
-      </div>
-      <div className="h-[350px] p-0">
+      {/* Removido o título "Ordens de Serviço por Status" */}
+      <div className="h-[250px] p-0"> {/* Altura ajustada */}
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -76,7 +74,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={true}
-                outerRadius={120} // Aumentado o raio externo
+                outerRadius={90} // Raio externo ajustado para o tamanho menor
                 fill="#8884d8"
                 dataKey="value"
                 label={CustomPieLabel} // Usando o componente de rótulo personalizado
@@ -87,7 +85,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" height={36} /> {/* Movendo a legenda para baixo */}
+              <Legend verticalAlign="bottom" align="center" height={36} /> {/* Legenda na parte inferior */}
             </PieChart>
           </ResponsiveContainer>
         ) : (
