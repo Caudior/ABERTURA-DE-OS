@@ -84,7 +84,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" height={70} /> {/* Aumentado a altura para 70 */}
+              <Legend verticalAlign="bottom" align="center" height={100} /> {/* Aumentado a altura para 100 */}
             </PieChart>
           </ResponsiveContainer>
         ) : (
