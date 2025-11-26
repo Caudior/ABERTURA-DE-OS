@@ -56,14 +56,14 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg">
+      <div className="w-full h-[250px] flex items-center justify-center">
         <Skeleton className="w-full h-full" />
       </div>
     );
   }
 
   return (
-    <div className="w-full border rounded-lg">
+    <div className="w-full"> {/* Removidas as classes border e rounded-lg */}
       <div className="h-[250px] p-0">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -84,7 +84,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 ))}
               </Pie>
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" height={100} /> {/* Aumentado a altura para 100 */}
+              <Legend verticalAlign="bottom" align="center" height={100} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
