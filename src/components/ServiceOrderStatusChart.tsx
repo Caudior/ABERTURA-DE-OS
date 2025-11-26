@@ -56,15 +56,15 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <div className="w-full h-[250px] flex items-center justify-center">
+      <div className="w-full h-[280px] flex items-center justify-center"> {/* Aumentado a altura para 280px */}
         <Skeleton className="w-full h-full" />
       </div>
     );
   }
 
   return (
-    <div className="w-full"> {/* Removidas as classes border e rounded-lg */}
-      <div className="h-[250px] p-0">
+    <div className="w-full">
+      <div className="h-[280px] p-0"> {/* Aumentado a altura para 280px */}
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -73,7 +73,7 @@ const ServiceOrderStatusChart: React.FC = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false} // Desabilita a linha do rótulo, já que o texto estará dentro
-                outerRadius={90}
+                outerRadius={70} // Reduzido o raio externo para 70
                 fill="#8884d8"
                 dataKey="value"
                 label={CustomPieLabel} // Usando o componente de rótulo personalizado
