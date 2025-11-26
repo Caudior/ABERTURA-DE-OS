@@ -11,10 +11,10 @@ interface ChartData {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']; // Cores para os status
 
 // Componente de rótulo personalizado para o gráfico de pizza
-const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
+const CustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
   const RADIAN = Math.PI / 180;
-  // Posição do rótulo ajustada para o tamanho menor do gráfico
-  const radius = outerRadius + 20; // Afastar um pouco da fatia
+  // Calcula o raio para posicionar o rótulo dentro da fatia
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5; // Meio da fatia
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -22,13 +22,13 @@ const CustomPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) =
     <text
       x={x}
       y={y}
-      fill="black" // Cor preta para alto contraste
-      textAnchor={x > cx ? 'start' : 'end'}
-      dominantBaseline="central"
+      fill="white" // Cor branca para alto contraste dentro da fatia
+      textAnchor="middle" // Centraliza o texto horizontalmente
+      dominantBaseline="central" // Centraliza o texto verticalmente
       fontSize="12px" // Tamanho da fonte explícito
       fontWeight="bold" // Negrito para destaque
     >
-      {`${name} ${(percent * 100).toFixed(0)}%`}
+      {`${(percent * 100).toFixed(0)}%`}
     </text>
   );
 };
@@ -56,7 +56,7 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   if (loadingServiceOrders) {
     return (
-      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg"> {/* Altura ajustada */}
+      <div className="w-full h-[250px] flex items-center justify-center border rounded-lg">
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -64,8 +64,7 @@ const ServiceOrderStatusChart: React.FC = () => {
 
   return (
     <div className="w-full border rounded-lg">
-      {/* Removido o título "Ordens de Serviço por Status" */}
-      <div className="h-[250px] p-0"> {/* Altura ajustada */}
+      <div className="h-[250px] p-0">
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -73,19 +72,19 @@ const ServiceOrderStatusChart: React.FC = () => {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                labelLine={true}
-                outerRadius={90} // Raio externo ajustado para o tamanho menor
+                labelLine={false} // Desabilita a linha do rótulo, já que o texto estará dentro
+                outerRadius={90}
                 fill="#8884d8"
                 dataKey="value"
                 label={CustomPieLabel} // Usando o componente de rótulo personalizado
-                paddingAngle={5} // Adiciona um pequeno espaçamento entre as fatias
+                paddingAngle={5}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
-              <Legend verticalAlign="bottom" align="center" height={36} /> {/* Legenda na parte inferior */}
+              <Legend verticalAlign="bottom" align="center" height={36} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
