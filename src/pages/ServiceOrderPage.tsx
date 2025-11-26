@@ -51,23 +51,30 @@ const ServiceOrderPage: React.FC = () => {
     return false;
   };
 
-  const filteredOrders = serviceOrders.filter(order => {
-    const statusMatch = filterStatus === 'Todos' || order.status === filterStatus;
-    const osNumberString = order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8);
-    // CORREÇÃO AQUI: searchOsOsNumber foi alterado para searchOsNumber
-    const osNumberMatch = searchOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
-    const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
+  const filteredAndSortedOrders = serviceOrders
+    .filter(order => {
+      const statusMatch = filterStatus === 'Todos' || order.status === filterStatus;
+      const osNumberString = order.orderNumber?.toString().padStart(4, '0') || order.id.substring(0, 8);
+      const osNumberMatch = searchOsNumber === '' || osNumberString.toLowerCase().includes(searchOsNumber.toLowerCase());
+      const clientNameMatch = searchClientName === '' || order.clientName.toLowerCase().includes(searchClientName.toLowerCase());
 
-    let dateRangeMatch = true;
-    if (dateRange?.from) {
-      const orderLocalDayStart = startOfDay(order.issueDate);
-      const filterRangeStart = startOfDay(dateRange.from);
-      const filterRangeEnd = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-      dateRangeMatch = orderLocalDayStart.getTime() >= filterRangeStart.getTime() && orderLocalDayStart.getTime() <= filterRangeEnd.getTime();
-    }
+      let dateRangeMatch = true;
+      if (dateRange?.from) {
+        const orderLocalDayStart = startOfDay(order.issueDate);
+        const filterRangeStart = startOfDay(dateRange.from);
+        const filterRangeEnd = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+        dateRangeMatch = orderLocalDayStart.getTime() >= filterRangeStart.getTime() && orderLocalDayStart.getTime() <= filterRangeEnd.getTime();
+      }
 
-    return statusMatch && osNumberMatch && clientNameMatch && dateRangeMatch;
-  });
+      return statusMatch && osNumberMatch && clientNameMatch && dateRangeMatch;
+    })
+    .sort((a, b) => {
+      // Ordena por orderNumber em ordem crescente
+      // Trata undefined/null como 0 para fins de ordenação, colocando-os no início
+      const orderA = a.orderNumber ?? 0;
+      const orderB = b.orderNumber ?? 0;
+      return orderA - orderB;
+    });
 
   const getStatusClasses = (order: ServiceOrder) => {
     const status = order.status;
@@ -141,7 +148,7 @@ const ServiceOrderPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOrders.map((order) => {
+          {filteredAndSortedOrders.map((order) => {
             const daysOpen = differenceInDays(new Date(), order.issueDate);
             return (
               <Card key={order.id} className="shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -188,7 +195,7 @@ const ServiceOrderPage: React.FC = () => {
           })}
         </div>
 
-        {filteredOrders.length === 0 && (
+        {filteredAndSortedOrders.length === 0 && (
           <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
             Nenhuma ordem de serviço encontrada com o status "{filterStatus}".
           </p>
